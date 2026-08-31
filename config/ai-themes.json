@@ -1,0 +1,47 @@
+{
+  "biologi": {
+    "name": "Bio",
+    "fullName": "Profesor Bio",
+    "avatar": "🌿",
+    "primaryColor": "#10b981",
+    "accentColor": "#059669",
+    "bgGradient": "linear-gradient(170deg, #0c1017 0%, #0d1a16 50%, #0e121b 100%)",
+    "greeting": "Halo! Saya Profesor Bio. Mari kita eksplorasi konsep biologi dan metabolisme secara mendalam!"
+  },
+  "sejarah": {
+    "name": "Chrono",
+    "fullName": "Pak Chrono",
+    "avatar": "🏛️",
+    "primaryColor": "#f59e0b",
+    "accentColor": "#d97706",
+    "bgGradient": "linear-gradient(170deg, #0c1017 0%, #1a160d 50%, #0e121b 100%)",
+    "greeting": "Selamat datang! Bersama Pak Chrono, kita telaah peristiwa dan analisis sebab-akibat sejarah bersama."
+  },
+  "matematika": {
+    "name": "Sigma",
+    "fullName": "Si Sigma",
+    "avatar": "📐",
+    "primaryColor": "#6366f1",
+    "accentColor": "#4f46e5",
+    "bgGradient": "linear-gradient(170deg, #0c1017 0%, #121426 50%, #0e121b 100%)",
+    "greeting": "Hai! Saya Sigma. Tidak ada soal rumit jika kita bedah langkah demi langkah. Apa topikmu hari ini?"
+  },
+  "fisika": {
+    "name": "Foton",
+    "fullName": "Dr. Foton",
+    "avatar": "⚡",
+    "primaryColor": "#38bdf8",
+    "accentColor": "#0284c7",
+    "bgGradient": "linear-gradient(170deg, #0c1017 0%, #0c1824 50%, #0e121b 100%)",
+    "greeting": "Selamat datang di ruang fisika! Saya Dr. Foton, siap membantu membedah hukum alam dan penerapan rumusnya."
+  },
+  "umum": {
+    "name": "Menti",
+    "fullName": "Asisten Menti",
+    "avatar": "🦉",
+    "primaryColor": "#8b5cf6",
+    "accentColor": "#7c3aed",
+    "bgGradient": "linear-gradient(170deg, #0c1017 0%, #161224 50%, #0e121b 100%)",
+    "greeting": "Halo! Saya Pamong AI, siap memandu belajarmu berbasis modul ajar guru secara interaktif."
+  }
+}

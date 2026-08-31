@@ -1,0 +1,29 @@
+MODUL AJAR BIOLOGI: FOTOSINTESIS DAN METABOLISME TUMBUHAN
+
+BAB 1: PENGERTIAN FOTOSINTESIS
+Fotosintesis adalah proses biokimia yang dilakukan oleh tumbuhan berklorofil, alga, dan beberapa jenis bakteri untuk menghasilkan energi makanan (glukosa) dari air (H2O) dan karbondioksida (CO2) dengan memanfaatkan energi cahaya matahari.
+
+Reaksi kimia fotosintesis dapat dituliskan sebagai berikut:
+6 CO2 + 6 H2O + Energi Cahaya Matahari -> C6H12O6 (Glukosa) + 6 O2 (Oksigen)
+
+BAB 2: TAHAPAN PROSES FOTOSINTESIS
+Fotosintesis berlangsung dalam dua tahapan utama di dalam organel kloroplas:
+
+1. Reaksi Terang (Light-Dependent Reaction):
+- Tempat berlangsung: Tilakoid / Grana pada kloroplas.
+- Memerlukan cahaya matahari secara langsung dan air (H2O).
+- Klorofil menyerap foton cahaya untuk memecah molekul air (Fotolisis air), melepaskan Oksigen (O2), serta menghasilkan ATP dan NADPH sebagai pembawa energi.
+
+2. Reaksi Gelap / Siklus Calvin (Light-Independent Reaction):
+- Tempat berlangsung: Stroma pada kloroplas.
+- Tidak memerlukan cahaya matahari secara langsung.
+- Menggunakan energi ATP dan NADPH dari reaksi terang untuk memfiksasi gas Karbondioksida (CO2) dan mengubahnya menjadi Glukosa (C6H12O6).
+
+BAB 3: FAKTOR-FAKTOR YANG MEMENGARUHI LAJU FOTOSINTESIS
+1. Intensitas Cahaya: Semakin tinggi intensitas cahaya hingga titik jenuh tertentu, semakin cepat laju fotosintesis.
+2. Konsentrasi Karbondioksida (CO2): Ketersediaan CO2 merupakan bahan baku utama siklus Calvin.
+3. Suhu Lingkungan: Enzim rubisco dan enzim fotosintesis lainnya bekerja optimal pada suhu 25°C - 35°C. Suhu terlalu tinggi akan mendenaturasi enzim.
+4. Ketersediaan Air: Kekurangan air menyebabkan stomata menutup untuk mencegah transpirasi berlebih, sehingga asupan CO2 berkurang.
+
+BAB 4: PERAN DAN DAMPAK EKOLOGIS FOTOSINTESIS
+Fotosintesis adalah dasar dari rantai makanan di bumi (produsen primer). Oksigen yang dihasilkan merupakan gas vital bagi respirasi seluruh makhluk hidup aerobik, serta berperan menjaga keseimbangan siklus karbon global untuk mengurangi pemanasan global.
