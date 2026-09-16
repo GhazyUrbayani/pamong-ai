@@ -14,7 +14,24 @@ export interface LLMMessage {
   content: string;
 }
 
+/**
+ * Result of a chat call.
+ *
+ * `degraded` is true when the text did NOT come from a model — either no API key
+ * is configured or the provider call failed and the local heuristic stub answered
+ * instead. Callers MUST surface this to the user: the stub produces text that
+ * reads like a grounded answer, and silently passing it off as a real reply would
+ * misrepresent the retrieval lock this product is built on.
+ */
+export interface ChatResult {
+  text: string;
+  degraded: boolean;
+}
+
 export interface LLMService {
+  /** Chat call reporting whether the answer came from a model or the stub. */
+  chatWithMeta(messages: LLMMessage[], options?: ChatOptions): Promise<ChatResult>;
+  /** Convenience wrapper for callers that do not need the degraded flag. */
   chat(messages: LLMMessage[], options?: ChatOptions): Promise<string>;
   embed(text: string): Promise<number[]>;
   embedBatch(texts: string[]): Promise<number[][]>;
@@ -54,8 +71,12 @@ export class GeminiLLMService implements LLMService {
   }
 
   async chat(messages: LLMMessage[], options: ChatOptions = {}): Promise<string> {
+    return (await this.chatWithMeta(messages, options)).text;
+  }
+
+  async chatWithMeta(messages: LLMMessage[], options: ChatOptions = {}): Promise<ChatResult> {
     if (!this.hasValidKey()) {
-      return this.mockChat(messages);
+      return { text: this.mockChat(messages), degraded: true };
     }
 
     try {
@@ -77,10 +98,10 @@ export class GeminiLLMService implements LLMService {
         },
       });
 
-      return response.text ?? '';
+      return { text: response.text ?? '', degraded: false };
     } catch (err: any) {
       console.warn('[Gemini LLM] API call failed, falling back to local heuristic response:', err.message);
-      return this.mockChat(messages);
+      return { text: this.mockChat(messages), degraded: true };
     }
   }
 
@@ -216,8 +237,12 @@ export class OpenAILLMService implements LLMService {
   }
 
   async chat(messages: LLMMessage[], options: ChatOptions = {}): Promise<string> {
+    return (await this.chatWithMeta(messages, options)).text;
+  }
+
+  async chatWithMeta(messages: LLMMessage[], options: ChatOptions = {}): Promise<ChatResult> {
     if (!this.hasValidKey()) {
-      return this.mockChat(messages);
+      return { text: this.mockChat(messages), degraded: true };
     }
 
     try {
@@ -228,10 +253,10 @@ export class OpenAILLMService implements LLMService {
         max_tokens: options.maxTokens ?? 1000,
       });
 
-      return response.choices[0]?.message?.content ?? '';
+      return { text: response.choices[0]?.message?.content ?? '', degraded: false };
     } catch (err: any) {
       console.warn('[OpenAI LLM] API call failed, falling back to local heuristic response:', err.message);
-      return this.mockChat(messages);
+      return { text: this.mockChat(messages), degraded: true };
     }
   }
 

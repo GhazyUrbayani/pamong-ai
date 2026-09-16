@@ -29,3 +29,47 @@ export async function GET(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 }
+
+/**
+ * DELETE /api/sesi/[id] — erase a session and all personal data in it.
+ *
+ * Implements the data-subject erasure right for everything this session holds:
+ * every student record, every transcript, and the indexed module text. Irreversible
+ * and restricted to the teacher who owns the session.
+ *
+ * Deliberately API-only: there is no button in the teacher UI, so a demo cannot be
+ * wiped by a misplaced click.
+ */
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const token = extractBearerToken(req.headers.get('authorization'));
+  if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  try {
+    const payload = await verifyToken(token) as TeacherJWT & { sub: string };
+    if (payload.role !== 'teacher') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+    const { id } = await params;
+    const result = await sessionService.getSessionWithStudents(id);
+
+    if (!result) return NextResponse.json({ error: 'Sesi tidak ditemukan.' }, { status: 404 });
+    if (result.session.teacherId !== payload.sub) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const studentCount = result.students.length;
+    await sessionService.deleteSession(id);
+
+    return NextResponse.json({
+      deleted: true,
+      sessionId: id,
+      studentsDeleted: studentCount,
+      message: 'Sesi, seluruh transkrip, dan data siswa telah dihapus permanen.',
+    });
+  } catch (err) {
+    console.error('[api/sesi DELETE]', err);
+    return NextResponse.json({ error: 'Gagal menghapus sesi.' }, { status: 500 });
+  }
+}

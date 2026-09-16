@@ -78,6 +78,7 @@ export class ChatService {
         questionLevel: 'hafalan',
         quotaRemaining: 0,
         sources: [],
+        degraded: false,
       };
     }
 
@@ -148,7 +149,7 @@ export class ChatService {
       .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content }));
 
     // 7. Generate AI reply
-    const reply = await this.llm.chat(
+    const { text: reply, degraded } = await this.llm.chatWithMeta(
       [
         { role: 'system', content: systemPrompt },
         ...historyMessages,
@@ -190,6 +191,7 @@ export class ChatService {
       questionLevel,
       quotaRemaining,
       sources: retrieval.sources,
+      degraded,
     };
   }
 

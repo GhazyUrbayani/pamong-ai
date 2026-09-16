@@ -19,6 +19,14 @@ export const studentQueries = {
   insertMany: (rows: typeof students.$inferInsert[]) =>
     db.insert(students).values(rows),
 
+  /** Delete every student in a session (erasure) */
+  deleteBySession: (sessionId: string) =>
+    db.delete(students).where(eq(students.sessionId, sessionId)),
+
+  /** Replace one student's password hash (credential reset) */
+  updatePasswordHash: (id: string, passwordHash: string) =>
+    db.update(students).set({ passwordHash }).where(eq(students.id, id)),
+
   /** Get message count for a student (user messages only, not AI) */
   getMessageCount: (studentId: string) =>
     db

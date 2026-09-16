@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import aiThemes from '@/config/ai-themes.json';
+import { GUARDIAN_CONSENT_STATEMENT } from '@/types';
 
 export default function BuatSesiPage() {
   const router = useRouter();
@@ -14,6 +15,7 @@ export default function BuatSesiPage() {
   const [quotaPerStudent, setQuotaPerStudent] = useState(20);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [guardianConsent, setGuardianConsent] = useState(false);
 
   const CLASS_PRESETS = ['Kelas 10-A', 'Kelas 10-B', 'Kelas 10-C', 'Kelas 11-IPA 1', 'Kelas 11-IPA 2', 'Kelas 12-MIPA 1'];
 
@@ -47,6 +49,7 @@ export default function BuatSesiPage() {
           aiTheme: selectedTheme,
           maxStudents: Number(maxStudents),
           quotaPerStudent: Number(quotaPerStudent),
+          guardianConsent,
         }),
       });
 
@@ -216,11 +219,44 @@ export default function BuatSesiPage() {
               </div>
             </div>
 
+            {/* Guardian-consent attestation. The school obtains the consent itself;
+                this records who attested, when, and to exactly which wording, which
+                is what UU PDP requires a controller to be able to demonstrate. */}
+            <label
+              htmlFor="guardian-consent"
+              style={{
+                display: 'flex',
+                gap: '12px',
+                alignItems: 'flex-start',
+                marginTop: '20px',
+                padding: '14px 16px',
+                borderRadius: '12px',
+                background: 'var(--bg-elevated)',
+                border: `1px solid ${guardianConsent ? 'var(--status-green)' : 'var(--border-subtle)'}`,
+                cursor: 'pointer',
+              }}
+            >
+              <input
+                id="guardian-consent"
+                type="checkbox"
+                checked={guardianConsent}
+                onChange={(e) => setGuardianConsent(e.target.checked)}
+                style={{ marginTop: '3px', width: '18px', height: '18px', flexShrink: 0, cursor: 'pointer' }}
+              />
+              <span style={{ fontSize: '0.8125rem', lineHeight: 1.5, color: 'var(--text-secondary)' }}>
+                {GUARDIAN_CONSENT_STATEMENT.replace(/^v\d+: /, '')}
+                <br />
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                  Konfirmasi ini dicatat bersama waktu dan versi pernyataannya.
+                </span>
+              </span>
+            </label>
+
             <button
               id="buat-sesi-submit"
               type="submit"
               className="btn btn-primary mt-4"
-              disabled={isLoading}
+              disabled={isLoading || !guardianConsent}
             >
               {isLoading ? (
                 <div className="flex items-center gap-2">

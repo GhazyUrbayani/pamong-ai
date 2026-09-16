@@ -3,6 +3,10 @@ import { messages, knowledgeChunks } from '../schema';
 import { eq, and, desc } from 'drizzle-orm';
 
 export const messageQueries = {
+  /** Delete every message in a session (erasure) */
+  deleteBySession: (sessionId: string) =>
+    db.delete(messages).where(eq(messages.sessionId, sessionId)),
+
   /** Get all messages in a session room (for shared collaboration) */
   getByRoom: (sessionId: string, roomCode: string) =>
     db

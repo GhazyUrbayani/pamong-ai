@@ -21,16 +21,41 @@ export interface Session {
   quotaPerStudent: number;
   status: SessionStatus;
   createdAt: number;
+  /** When the teacher attested that guardian consent was obtained. */
+  guardianConsentAt: number | null;
+  /** The exact wording attested to, stored so the record is auditable. */
+  guardianConsentStatement: string | null;
 }
+
+/**
+ * The attestation a teacher must make before a class session can exist.
+ * Versioned: changing the wording must not silently reinterpret past records.
+ */
+export const GUARDIAN_CONSENT_STATEMENT =
+  'v1: Saya menyatakan bahwa sekolah telah memperoleh persetujuan orang tua/wali ' +
+  'untuk setiap siswa di kelas ini, sesuai UU No. 27 Tahun 2022 tentang Pelindungan ' +
+  'Data Pribadi, atas pemrosesan pertanyaan dan transkrip belajar mereka oleh Pamong AI.';
 
 export interface Student {
   id: string;
   sessionId: string;
   username: string;
-  passwordPlain: string;
+  passwordHash: string;
   displayName: string;
   roomCode: string | null;
   createdAt: number;
+}
+
+/**
+ * A credential at the one moment it exists in plaintext: immediately after
+ * generation or reset, on its way to the teacher. Never persisted, never returned
+ * by a read endpoint.
+ */
+export interface StudentCredential {
+  id: string;
+  username: string;
+  displayName: string;
+  password: string;
 }
 
 export interface Message {
@@ -99,6 +124,12 @@ export interface ChatResponse {
   questionLevel: QuestionLevel;
   quotaRemaining: number;
   sources: string[];
+  /**
+   * True when `reply` came from the offline heuristic stub instead of a model
+   * (no API key configured, or the provider call failed). The UI must label such
+   * replies — they are not grounded in the teacher's module.
+   */
+  degraded: boolean;
 }
 
 export interface SessionWithStudents extends Session {

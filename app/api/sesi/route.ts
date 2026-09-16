@@ -32,11 +32,21 @@ export async function POST(req: NextRequest) {
     if (payload.role !== 'teacher') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     const body = await req.json();
-    const { title, subject, aiTheme, maxStudents, quotaPerStudent } = body;
+    const { title, subject, aiTheme, maxStudents, quotaPerStudent, guardianConsent } = body;
 
     if (!title || !subject || !aiTheme) {
       return NextResponse.json(
         { error: 'Judul, mata pelajaran, dan tema AI wajib diisi.' },
+        { status: 400 }
+      );
+    }
+
+    if (guardianConsent !== true) {
+      return NextResponse.json(
+        {
+          error:
+            'Konfirmasi persetujuan orang tua/wali wajib sebelum kelas dibuat (UU PDP No. 27/2022).',
+        },
         { status: 400 }
       );
     }
@@ -48,6 +58,7 @@ export async function POST(req: NextRequest) {
       aiTheme,
       maxStudents: Math.min(Number(maxStudents) || 20, 20),
       quotaPerStudent: Math.min(Number(quotaPerStudent) || 20, 50),
+      guardianConsent: true,
     });
 
     return NextResponse.json(result, { status: 201 });

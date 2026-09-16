@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { verifyToken, extractBearerToken } from '@/lib/auth';
 import { getChatService } from '@/services/chat.service';
+import { sessionQueries } from '@/db/queries/sessions';
 import { TeacherJWT } from '@/types';
 
 const chatService = getChatService();
@@ -32,6 +33,13 @@ export async function GET(
     if (payload.role !== 'teacher') return new Response('Forbidden', { status: 403 });
 
     const { sesiId } = await params;
+
+    // Scope the stream to sessions this teacher owns. Without this, a teacher role
+    // alone would stream any class's per-student analytics to anyone who knows a
+    // session id — and seeded session ids are predictable.
+    const session = sessionQueries.getById(sesiId);
+    if (!session) return new Response('Not Found', { status: 404 });
+    if (session.teacherId !== payload.sub) return new Response('Forbidden', { status: 403 });
 
     const stream = new ReadableStream({
       async start(controller) {

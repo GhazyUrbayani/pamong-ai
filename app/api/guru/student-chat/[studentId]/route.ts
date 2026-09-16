@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractBearerToken } from '@/lib/auth';
 import { messageQueries } from '@/db/queries/messages';
 import { studentQueries } from '@/db/queries/students';
+import { sessionQueries } from '@/db/queries/sessions';
 import { TeacherJWT } from '@/types';
 
 export async function GET(
@@ -19,6 +20,14 @@ export async function GET(
     const student = studentQueries.getById(studentId);
     if (!student) return NextResponse.json({ error: 'Siswa tidak ditemukan.' }, { status: 404 });
 
+    // A teacher role alone is NOT enough: this response carries the student's full
+    // transcript and their password. Confirm the student sits in a session this
+    // teacher owns, or any teacher account could read any student in the database.
+    const session = sessionQueries.getById(student.sessionId);
+    if (!session || session.teacherId !== payload.sub) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const messages = await messageQueries.getBySoloStudent(studentId);
     const chatUsed = messages.filter((m) => m.role === 'user').length;
 
@@ -27,7 +36,6 @@ export async function GET(
         id: student.id,
         username: student.username,
         displayName: student.displayName,
-        passwordPlain: student.passwordPlain,
         sessionId: student.sessionId,
       },
       messages,

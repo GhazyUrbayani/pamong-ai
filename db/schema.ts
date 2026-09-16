@@ -20,6 +20,12 @@ export const sessions = sqliteTable('sessions', {
   quotaPerStudent: integer('quota_per_student').notNull().default(20),
   status: text('status', { enum: ['active', 'closed'] }).notNull().default('active'),
   createdAt: integer('created_at').notNull(),
+  // Guardian-consent record. UU PDP requires a controller to be able to demonstrate
+  // that consent was obtained for a child's data — not merely to assert it. The
+  // school collects the consent itself; these columns record who attested to it,
+  // when, and to exactly which wording.
+  guardianConsentAt: integer('guardian_consent_at'),
+  guardianConsentStatement: text('guardian_consent_statement'),
 });
 
 // ─── Knowledge Chunks (RAG) ──────────────────────────────────────────────────
@@ -37,7 +43,9 @@ export const students = sqliteTable('students', {
   id: text('id').primaryKey(),
   sessionId: text('session_id').notNull().references(() => sessions.id),
   username: text('username').notNull().unique(),
-  passwordPlain: text('password_plain').notNull(),
+  // bcrypt hash. The plaintext is shown to the teacher once, at generation or
+  // reset, and is never stored — see ARCHITECTURE.md §3.
+  passwordHash: text('password_hash').notNull(),
   displayName: text('display_name').notNull(),
   roomCode: text('room_code'),
   createdAt: integer('created_at').notNull(),

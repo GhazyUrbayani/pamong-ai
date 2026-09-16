@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm';
 import { signTeacherToken } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 import { runMigrations, seedTeacher } from '@/db/migrate';
+import { throttleLogin, clearLoginThrottle } from '@/lib/rate-limit';
 
 // Ensure DB is ready on first call
 let initialized = false;
@@ -26,6 +27,16 @@ export async function POST(req: NextRequest) {
     }
 
     const cleanEmail = email.trim().toLowerCase();
+
+    // Throttle before touching the database or bcrypt: an unthrottled endpoint is
+    // an open credential-guessing surface, and bcrypt work is a DoS lever too.
+    const throttle = throttleLogin('guru', cleanEmail, req.headers);
+    if (!throttle.allowed) {
+      return NextResponse.json(
+        { error: 'Terlalu banyak percobaan masuk. Coba lagi beberapa menit lagi.' },
+        { status: 429, headers: { 'Retry-After': String(throttle.retryAfterSeconds) } }
+      );
+    }
 
     let teacher = db
       .select()
@@ -50,6 +61,8 @@ export async function POST(req: NextRequest) {
     if (!valid) {
       return NextResponse.json({ error: 'Email atau password salah.' }, { status: 401 });
     }
+
+    clearLoginThrottle(throttle);
 
     const token = await signTeacherToken({
       sub: teacher.id,

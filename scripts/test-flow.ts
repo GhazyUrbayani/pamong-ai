@@ -20,18 +20,19 @@ async function main() {
 
   // 2. Create Session & Auto-generate 20 students
   const sessionService = getSessionService();
-  const { session, students } = await sessionService.createSession({
+  const { session, students, credentials } = await sessionService.createSession({
     teacherId,
     title: 'Fotosintesis & Metabolisme',
     subject: 'Biologi',
     aiTheme: 'biologi',
     maxStudents: 20,
     quotaPerStudent: 20,
+    guardianConsent: true,
   });
 
   console.log(`✅ 2. Created Session "${session.title}" with ${students.length} auto-generated student credentials`);
-  console.log(`   Sample Student 1: ${students[0].username} / ${students[0].passwordPlain}`);
-  console.log(`   Sample Student 2: ${students[1].username} / ${students[1].passwordPlain}`);
+  console.log(`   Sample Student 1: ${credentials[0].username} / ${credentials[0].password}`);
+  console.log(`   Sample Student 2: ${credentials[1].username} / ${credentials[1].password}`);
 
   // 3. Process & Ingest Material (RAG)
   const sampleFilePath = path.join(__dirname, '../public/materi-contoh-fotosintesis.txt');

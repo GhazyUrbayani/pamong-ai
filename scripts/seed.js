@@ -1,7 +1,136 @@
 const Database = require('better-sqlite3');
 const bcrypt = require('bcryptjs');
+const fs = require('fs');
+const path = require('path');
 
 const db = new Database('pamong-ai.db');
+
+// ─── Env ─────────────────────────────────────────────────────────────────────
+// This script runs outside Next.js, which is what loads .env.local normally.
+// Read it here so the seed embeds with the same provider the running app will
+// use to embed queries. Mismatched providers produce unusable similarity scores.
+function loadEnvLocal() {
+  const envPath = path.join(process.cwd(), '.env.local');
+  if (!fs.existsSync(envPath)) return;
+
+  for (const line of fs.readFileSync(envPath, 'utf-8').split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+
+    const eq = trimmed.indexOf('=');
+    if (eq === -1) continue;
+
+    const key = trimmed.slice(0, eq).trim();
+    const value = trimmed.slice(eq + 1).trim().replace(/^["']|["']$/g, '');
+    if (key && !(key in process.env)) process.env[key] = value;
+  }
+}
+
+// ─── RAG helpers ─────────────────────────────────────────────────────────────
+// These MUST stay identical to services/rag.service.ts and services/llm.service.ts.
+// Chunks seeded here are retrieved by the running app, so any divergence in
+// chunking or embedding silently breaks relevance scoring.
+
+const CHUNK_SIZE = 500;
+const CHUNK_OVERLAP = 50;
+
+// Must match GUARDIAN_CONSENT_STATEMENT in types/index.ts. This script runs outside
+// the TypeScript build, so the string is duplicated rather than imported.
+const GUARDIAN_CONSENT_STATEMENT =
+  'v1: Saya menyatakan bahwa sekolah telah memperoleh persetujuan orang tua/wali ' +
+  'untuk setiap siswa di kelas ini, sesuai UU No. 27 Tahun 2022 tentang Pelindungan ' +
+  'Data Pribadi, atas pemrosesan pertanyaan dan transkrip belajar mereka oleh Pamong AI.';
+
+/** Mirror of RAGService.chunkText */
+function chunkText(text) {
+  const normalized = text.replace(/\s+/g, ' ').trim();
+  if (!normalized) return [];
+
+  const chunks = [];
+  const step = Math.max(1, CHUNK_SIZE - CHUNK_OVERLAP);
+
+  for (let start = 0; start < normalized.length; start += step) {
+    const end = Math.min(start + CHUNK_SIZE, normalized.length);
+    const chunk = normalized.slice(start, end).trim();
+    if (chunk.length > 20) chunks.push(chunk);
+    if (end >= normalized.length) break;
+  }
+
+  return chunks;
+}
+
+/** Mirror of the 64-dimensional heuristic embedding in llm.service.ts */
+function mockEmbed(text) {
+  const vec = new Array(64).fill(0);
+  const words = text.toLowerCase().split(/\s+/);
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i];
+    for (let j = 0; j < word.length; j++) {
+      const idx = (word.charCodeAt(j) * (j + 1) + i) % 64;
+      vec[idx] += 1;
+    }
+  }
+  const mag = Math.sqrt(vec.reduce((s, v) => s + v * v, 0)) || 1;
+  return vec.map((v) => v / mag);
+}
+
+function hasGeminiKey() {
+  const key = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
+  return Boolean(key.trim()) && !key.startsWith('YOUR_') && !key.startsWith('sk-...');
+}
+
+/**
+ * Embed chunks with Gemini when a key is available, otherwise with the local
+ * heuristic. Returns the vectors plus which path produced them, so the caller
+ * can warn the operator.
+ */
+async function embedChunks(chunks) {
+  if (!hasGeminiKey()) {
+    return { vectors: chunks.map(mockEmbed), real: false };
+  }
+
+  try {
+    const { GoogleGenAI } = await import('@google/genai');
+    const ai = new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY,
+    });
+    const model = process.env.GEMINI_EMBEDDING_MODEL || 'text-embedding-004';
+
+    const response = await ai.models.embedContent({ model, contents: chunks });
+    const vectors = (response.embeddings || []).map((e) => e.values);
+
+    if (vectors.length !== chunks.length || vectors.some((v) => !v || !v.length)) {
+      throw new Error('incomplete embedding response');
+    }
+    return { vectors, real: true };
+  } catch (err) {
+    console.warn(`[Seed] Gemini embedding failed (${err.message}); using heuristic vectors.`);
+    return { vectors: chunks.map(mockEmbed), real: false };
+  }
+}
+
+/** Ingest a module file into a session's knowledge base. */
+async function seedModule(sessionId, filePath) {
+  const raw = fs.readFileSync(filePath, 'utf-8');
+  const chunks = chunkText(raw);
+  if (chunks.length === 0) return { count: 0, real: false };
+
+  const { vectors, real } = await embedChunks(chunks);
+
+  db.prepare('DELETE FROM knowledge_chunks WHERE session_id = ?').run(sessionId);
+
+  const insert = db.prepare(`
+    INSERT INTO knowledge_chunks (id, session_id, chunk_text, embedding_json, chunk_index)
+    VALUES (?, ?, ?, ?, ?)
+  `);
+  for (let i = 0; i < chunks.length; i++) {
+    insert.run(crypto.randomUUID(), sessionId, chunks[i], JSON.stringify(vectors[i]), i);
+  }
+
+  return { count: chunks.length, real };
+}
+
+loadEnvLocal();
 
 async function seed() {
   console.log('[Seed] Seeding realistic Indonesian classroom & Bloom taxonomy chats...');
@@ -25,7 +154,9 @@ async function seed() {
       max_students INTEGER NOT NULL DEFAULT 20,
       quota_per_student INTEGER NOT NULL DEFAULT 20,
       status TEXT NOT NULL DEFAULT 'active',
-      created_at INTEGER NOT NULL
+      created_at INTEGER NOT NULL,
+      guardian_consent_at INTEGER,
+      guardian_consent_statement TEXT
     );
 
     CREATE TABLE IF NOT EXISTS knowledge_chunks (
@@ -40,7 +171,7 @@ async function seed() {
       id TEXT PRIMARY KEY,
       session_id TEXT NOT NULL REFERENCES sessions(id),
       username TEXT NOT NULL UNIQUE,
-      password_plain TEXT NOT NULL,
+      password_hash TEXT NOT NULL,
       display_name TEXT NOT NULL,
       room_code TEXT,
       created_at INTEGER NOT NULL
@@ -490,8 +621,8 @@ async function seed() {
 
   for (const sConf of SESSIONS_CONFIG) {
     db.prepare(`
-      INSERT INTO sessions (id, teacher_id, title, subject, ai_theme, max_students, quota_per_student, status, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO sessions (id, teacher_id, title, subject, ai_theme, max_students, quota_per_student, status, created_at, guardian_consent_at, guardian_consent_statement)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       sConf.id,
       teacher.id,
@@ -501,7 +632,10 @@ async function seed() {
       20,
       20,
       'active',
-      now - 7200000
+      now - 7200000,
+      // Demo classes carry the same attestation a real class would.
+      now - 7200000,
+      GUARDIAN_CONSENT_STATEMENT
     );
 
 
@@ -511,13 +645,14 @@ async function seed() {
       const studentId = `std-${sConf.id}-${i + 1}`;
 
       db.prepare(`
-        INSERT INTO students (id, session_id, username, password_plain, display_name, room_code, created_at)
+        INSERT INTO students (id, session_id, username, password_hash, display_name, room_code, created_at)
         VALUES (?, ?, ?, ?, ?, ?, ?)
       `).run(
         studentId,
         sConf.id,
         username,
-        s.password,
+        // Demo passwords are documented in the README; only the hash is stored.
+        bcrypt.hashSync(s.password, 10),
         s.name,
         null,
         now - 7200000 + i * 10000
@@ -548,6 +683,34 @@ async function seed() {
   }
 
   console.log('[Seed] Database seeded with 3 classes (60 students) and full multi-class chat history!');
+
+  // ─── Module ingestion ──────────────────────────────────────────────────────
+  // Without this, every seeded session has an empty knowledge base and the tutor
+  // has nothing to ground answers in — which makes the retrieval lock impossible
+  // to evaluate. Only class 10-A gets a module; the other two are deliberately
+  // left empty so the "teacher has not uploaded material yet" gate is demoable.
+  const modulePath = path.join(process.cwd(), 'public', 'materi-contoh-fotosintesis.txt');
+
+  if (fs.existsSync(modulePath)) {
+    const { count, real } = await seedModule('sesi-demo-biologi-fotosintesis', modulePath);
+    console.log(
+      `[Seed] Module ingested for Kelas 10-A: ${count} chunks, ` +
+        `${real ? 'Gemini embeddings' : 'heuristic embeddings'}.`
+    );
+
+    if (!real) {
+      console.warn(
+        '[Seed] WARNING: no usable GEMINI_API_KEY, so chunks were embedded with the\n' +
+          '        64-dimensional heuristic. If you add a key later, RE-RUN THIS SEED —\n' +
+          '        heuristic chunk vectors cannot be compared against Gemini query vectors,\n' +
+          '        and retrieval will return irrelevant results until they match.'
+      );
+    }
+  } else {
+    console.warn(`[Seed] Module file not found at ${modulePath}; knowledge base left empty.`);
+  }
+
+  console.log('[Seed] Kelas 10-B and Kelas 11-IPA 1 intentionally have no module uploaded.');
 }
 
 seed().catch(console.error);

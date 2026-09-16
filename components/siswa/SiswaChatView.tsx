@@ -28,6 +28,8 @@ export default function SiswaChatView() {
   const [chatUsed, setChatUsed] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isThemePickerOpen, setIsThemePickerOpen] = useState(false);
+  // True when the last reply came from the offline stub instead of a model.
+  const [isDegraded, setIsDegraded] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -127,6 +129,9 @@ export default function SiswaChatView() {
         throw new Error(data.error || 'Gagal mengirim pesan');
       }
 
+      // Surface whether this reply actually came from a model
+      setIsDegraded(Boolean(data.degraded));
+
       // Update the user message with classified questionLevel
       setMessages((prev) =>
         prev.map((m) =>
@@ -215,6 +220,36 @@ export default function SiswaChatView() {
         </a>
       </div>
 
+
+      {/* Degraded-mode banner: the stub is NOT grounded in the teacher's module,
+          so it must never be mistaken for a real answer. */}
+      {isDegraded && (
+        <div
+          role="status"
+          style={{
+            padding: '10px 20px',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '10px',
+            fontSize: '0.8125rem',
+            lineHeight: 1.45,
+            color: 'var(--status-yellow)',
+            background: 'var(--status-yellow-bg)',
+            borderBottom: '1px solid var(--status-yellow)',
+          }}
+        >
+          <span aria-hidden="true" style={{ fontSize: '1rem', lineHeight: 1.2 }}>
+            ⚠️
+          </span>
+          <span>
+            <strong>Mode contoh — bukan jawaban AI.</strong> Tidak ada model bahasa
+            yang aktif, jadi balasan di bawah diambil dari teks contoh bawaan aplikasi
+            dan <strong>tidak dibaca dari modul gurumu</strong>. Jangan dipakai untuk
+            belajar. Pengelola perlu menyetel <code>GEMINI_API_KEY</code> di{' '}
+            <code>.env.local</code>.
+          </span>
+        </div>
+      )}
 
       {/* Header */}
       <header className="chat-header justify-between">

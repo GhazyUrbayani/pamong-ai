@@ -98,7 +98,7 @@ export default function DetailSesiPage() {
         <UploadMateri sessionId={session.id} />
 
         {/* Kredensial List Component */}
-        <KredensialList students={students} sessionTitle={session.title} />
+        <KredensialList students={students} sessionTitle={session.title} sessionId={session.id} />
       </main>
     </div>
   );
