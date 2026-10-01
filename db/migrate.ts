@@ -162,7 +162,7 @@ export async function seedTeacher() {
   if (existing) return;
 
   const passwordHash = await bcrypt.hash(password, 10);
-  const id = crypto.randomUUID();
+  const id = 'teacher-ibu-sari-001';
   const now = Date.now();
 
   sqlite.prepare(
