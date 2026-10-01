@@ -1,25 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/db/client';
-import { teachers } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { signTeacherToken } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
-import { runMigrations, seedTeacher } from '@/db/migrate';
 import { throttleLogin, clearLoginThrottle } from '@/lib/rate-limit';
 
 // Ensure DB is ready on first call
 let initialized = false;
 async function ensureInit() {
   if (initialized) return;
+
+  // Keep the SQLite/native database module behind a dynamic import so an
+  // unsupported serverless runtime fails inside POST's error boundary instead
+  // of crashing the route module before it can return JSON.
+  const { runMigrations, seedTeacher } = await import('@/db/migrate');
   runMigrations();
   await seedTeacher();
   initialized = true;
 }
 
 export async function POST(req: NextRequest) {
-  await ensureInit();
-
   try {
+    await ensureInit();
+
+    const [{ db }, { teachers }] = await Promise.all([
+      import('@/db/client'),
+      import('@/db/schema'),
+    ]);
+
     const { email, password } = await req.json();
 
     if (!email || !password) {
@@ -77,6 +84,12 @@ export async function POST(req: NextRequest) {
     });
   } catch (err) {
     console.error('[auth/guru]', err);
-    return NextResponse.json({ error: 'Terjadi kesalahan server.' }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Layanan login belum tersedia pada deployment ini. Hubungi pengelola aplikasi.',
+        code: 'BACKEND_UNAVAILABLE',
+      },
+      { status: 503 }
+    );
   }
 }
