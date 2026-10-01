@@ -90,19 +90,21 @@ function DashboardContent() {
 
   const activeCount = stats.filter((student) => student.chatUsed > 0).length;
   const valid = stats.reduce((sum, student) => sum + student.validClassified, 0);
-  const syntheticClassified = useMemo(
+  const classified = useMemo(
     () =>
-      stats.reduce(
-        (sum, student) =>
-          sum +
-          student.categories.hafalan +
-          student.categories.pemahaman +
-          student.categories.analisis,
-        0
-      ),
-    [stats]
+      dataMode === 'demo'
+        ? stats.reduce(
+            (sum, student) =>
+              sum +
+              student.categories.hafalan +
+              student.categories.pemahaman +
+              student.categories.analisis,
+            0
+          )
+        : valid,
+    [dataMode, stats, valid]
   );
-  const unknown = stats.reduce((sum, student) => sum + student.unclassified, 0);
+  const reviewCount = stats.reduce((sum, student) => sum + student.unclassified, 0);
 
   const setMode = (mode: DataMode) => {
     const next = new URLSearchParams(params.toString());
@@ -135,17 +137,17 @@ function DashboardContent() {
           <h1 className="font-bold">🦉 Pamong AI</h1>
           <div className="flex items-center gap-2 mt-1">
             <span className={`data-status-pill ${dataMode}`}>
-              {dataMode === 'demo' ? 'Demo • data sintetik' : 'Real Data'}
+              {dataMode === 'demo' ? 'Demo MVP' : 'Real Data'}
             </span>
-            <span className="text-xs text-muted">
-              {dataMode === 'demo'
-                ? 'Preview MVP'
-                : streamConnected
-                  ? 'SSE aktif'
+            {dataMode === 'real' && (
+              <span className="text-xs text-muted">
+                {streamConnected
+                  ? 'Terhubung'
                   : dataError
                     ? 'Backend tidak tersedia'
                     : 'Menghubungkan…'}
-            </span>
+              </span>
+            )}
           </div>
         </div>
 
@@ -158,7 +160,7 @@ function DashboardContent() {
               onClick={() => setMode('demo')}
             >
               Demo
-              <span>Data Sintetik</span>
+              <span>MVP</span>
             </button>
             <button
               type="button"
@@ -167,7 +169,7 @@ function DashboardContent() {
               onClick={() => setMode('real')}
             >
               Real
-              <span>Database</span>
+              <span>Data</span>
             </button>
           </div>
 
@@ -186,20 +188,7 @@ function DashboardContent() {
         </div>
       </header>
 
-      <main className="page-container mt-6 flex flex-col gap-6">
-        {dataMode === 'demo' && (
-          <div className="demo-data-notice" role="status">
-            <div>
-              <strong>Mode Demo MVP</strong>
-              <p>
-                Kelas, siswa, distribusi pertanyaan, dan transcript pada mode ini adalah
-                <strong> data sintetik</strong> untuk memperlihatkan alur dan UI. Bukan aktivitas
-                siswa nyata dan bukan hasil klasifikasi model live.
-              </p>
-            </div>
-          </div>
-        )}
-
+      <main className="page-container dashboard-main">
         {dataError ? (
           <div className="card real-data-error">
             <h2 className="font-bold">Real Data belum tersedia</h2>
@@ -231,18 +220,13 @@ function DashboardContent() {
         ) : (
           <>
             <div className="card">
-              <div className="flex justify-between items-center gap-3 flex-wrap mb-3">
+              <div className="dashboard-section-heading">
                 <div>
                   <h2 className="font-bold">Kelas & sesi</h2>
-                  <p className="text-xs text-muted">
-                    {dataMode === 'demo'
-                      ? '3 skenario kelas sintetik untuk presentasi MVP.'
-                      : 'Sesi yang tersimpan pada backend.'}
+                  <p className="text-sm text-muted">
+                    Pilih kelas untuk melihat aktivitas dan pola pertanyaan siswa.
                   </p>
                 </div>
-                <span className={`data-status-pill ${dataMode}`}>
-                  {dataMode === 'demo' ? 'SINTETIK' : 'DATABASE'}
-                </span>
               </div>
               <div className="flex flex-wrap gap-2">
                 {sessions.map((session) => (
@@ -268,44 +252,31 @@ function DashboardContent() {
               <Metric
                 label="Total siswa"
                 value={stats.length}
-                sub={
-                  String(activeCount) +
-                  (dataMode === 'demo' ? ' sudah memiliki contoh aktivitas' : ' sudah bertanya')
-                }
+                sub={String(activeCount) + ' sudah bertanya'}
               />
               <Metric
-                label={dataMode === 'demo' ? 'Contoh klasifikasi sintetik' : 'Klasifikasi model valid'}
-                value={dataMode === 'demo' ? syntheticClassified : valid}
-                sub={
-                  dataMode === 'demo'
-                    ? 'Hanya untuk visualisasi distribusi'
-                    : 'Denominator distribusi pertanyaan'
-                }
+                label="Pertanyaan terklasifikasi"
+                value={classified}
+                sub="Berhasil dikenali kategorinya"
               />
               <Metric
-                label="Belum terklasifikasi"
-                value={unknown}
-                sub={
-                  dataMode === 'demo'
-                    ? 'Contoh state unknown pada data sintetik'
-                    : 'Unavailable, malformed/error, legacy, atau synthetic'
-                }
+                label="Perlu ditinjau"
+                value={reviewCount}
+                sub="Belum mendapat kategori pertanyaan"
               />
               <Metric
                 label="Kuota per siswa"
                 value={active?.quotaPerStudent || 0}
-                sub="Pesan pengguna maksimum"
+                sub="Maksimum pesan per siswa"
               />
             </div>
 
             <div>
-              <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="dashboard-section-heading distribution-heading">
                 <div>
                   <h2 className="font-bold">Distribusi bentuk pertanyaan</h2>
-                  <p className="text-xs text-muted mb-3">
-                    {dataMode === 'demo'
-                      ? 'Visualisasi berikut memakai contoh sintetik dan tidak masuk statistik model valid.'
-                      : 'Observasi jenis pertanyaan, bukan diagnosis kemampuan atau progres belajar.'}
+                  <p className="text-sm text-muted">
+                    Observasi jenis pertanyaan, bukan diagnosis kemampuan atau progres belajar.
                   </p>
                 </div>
                 <div className="question-legend" aria-label="Legenda kategori pertanyaan">
@@ -333,12 +304,10 @@ function DashboardContent() {
 
 function Metric({ label, value, sub }: { label: string; value: number; sub: string }) {
   return (
-    <div className="card">
-      <div className="text-xs text-secondary">{label}</div>
-      <div className="font-mono" style={{ fontSize: '2rem', fontWeight: 800 }}>
-        {value}
-      </div>
-      <div className="text-xs text-muted">{sub}</div>
+    <div className="card metric-card">
+      <div className="metric-label">{label}</div>
+      <div className="metric-value">{value}</div>
+      <div className="metric-sub">{sub}</div>
     </div>
   );
 }
