@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { studentQueries } from '@/db/queries/students';
-import { sessionQueries } from '@/db/queries/sessions';
 import { signStudentToken } from '@/lib/auth';
 import { throttleLogin, clearLoginThrottle } from '@/lib/rate-limit';
 import bcrypt from 'bcryptjs';
 
 export async function POST(req: NextRequest) {
   try {
+    // Delay database imports until the request is inside the error boundary.
+    // This keeps native SQLite/runtime failures from turning into an empty 500.
+    const [{ studentQueries }, { sessionQueries }] = await Promise.all([
+      import('@/db/queries/students'),
+      import('@/db/queries/sessions'),
+    ]);
+
     const { username, password } = await req.json();
 
     if (!username || !password) {
@@ -23,7 +28,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const student = studentQueries.getByUsername(cleanUsername);
+    const student = await studentQueries.getByUsername(cleanUsername);
 
     const passwordValid = student
       ? await bcrypt.compare(password, student.passwordHash)
@@ -33,7 +38,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Username atau password salah.' }, { status: 401 });
     }
 
-    const session = sessionQueries.getById(student.sessionId);
+    const session = await sessionQueries.getById(student.sessionId);
     if (!session || session.status !== 'active') {
       return NextResponse.json({ error: 'Sesi kelas tidak aktif atau sudah berakhir.' }, { status: 403 });
     }
@@ -66,6 +71,12 @@ export async function POST(req: NextRequest) {
     });
   } catch (err) {
     console.error('[auth/siswa]', err);
-    return NextResponse.json({ error: 'Terjadi kesalahan server.' }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Layanan login belum tersedia pada deployment ini. Hubungi pengelola aplikasi.',
+        code: 'BACKEND_UNAVAILABLE',
+      },
+      { status: 503 }
+    );
   }
 }
