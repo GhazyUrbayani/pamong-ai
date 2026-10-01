@@ -88,17 +88,31 @@ html {
 }
 
 body {
-  font-family: var(--font-sans), 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  font-size: 1rem;
   background: var(--bg-base);
   color: var(--text-primary);
-  line-height: 1.6;
+  line-height: 1.65;
   min-height: 100dvh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  letter-spacing: -0.012em;
+  letter-spacing: -0.006em;
 }
 
+h1, h2, h3, h4 {
+  font-family: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: var(--text-primary);
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+}
+
+h1 { font-size: 1.5rem; font-weight: 800; }
+h2 { font-size: 1.375rem; font-weight: 750; }
+h3 { font-size: 1.0625rem; font-weight: 700; }
+h4 { font-size: 1rem; font-weight: 700; }
+
+p { line-height: 1.65; }
 
 a { color: inherit; text-decoration: none; }
 button { font-family: inherit; cursor: pointer; border: none; background: none; }
@@ -235,8 +249,8 @@ ul, ol { list-style: none; }
 .text-muted    { color: var(--text-muted); }
 .text-secondary { color: var(--text-secondary); }
 .text-brand    { color: var(--text-brand); }
-.text-sm       { font-size: 0.875rem; }
-.text-xs       { font-size: 0.75rem; }
+.text-sm       { font-size: 0.9375rem; line-height: 1.55; }
+.text-xs       { font-size: 0.8125rem; line-height: 1.5; }
 .text-base     { font-size: 1rem; }
 .text-2xl      { font-size: 1.5rem; }
 .font-mono     { font-family: 'JetBrains Mono', 'Fira Code', monospace; letter-spacing: 0; }
@@ -454,6 +468,16 @@ ul, ol { list-style: none; }
   border-bottom: 1px solid var(--border-subtle);
 }
 
+.page-header h1 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.page-header p {
+  font-size: 0.8125rem;
+}
+
 /* ═══════════════════════════════════════════════════════════════
    BOTTOM NAV (Mobile-first)
 ═══════════════════════════════════════════════════════════════ */
@@ -512,8 +536,8 @@ ul, ol { list-style: none; }
 .bottom-nav-item.active .bottom-nav-icon { transform: scale(1.08); }
 
 .bottom-nav-label {
-  font-size: 10px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 650;
   letter-spacing: 0.02em;
 }
 
@@ -830,7 +854,7 @@ ul, ol { list-style: none; }
 .quota-fill.critical { background: var(--status-red); }
 
 .quota-label {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
   min-width: 48px;
@@ -844,15 +868,16 @@ ul, ol { list-style: none; }
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
+  line-height: 1.5;
 }
 
 .student-table th {
   text-align: left;
   padding: 12px 18px;
   color: var(--text-muted);
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.8125rem;
+  font-weight: 750;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   background: var(--bg-surface);
@@ -865,7 +890,12 @@ ul, ol { list-style: none; }
   border-bottom: 1px solid var(--border-subtle);
   color: var(--text-primary);
   vertical-align: middle;
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
+}
+
+.student-table td strong {
+  font-size: 0.9375rem;
+  font-weight: 750;
 }
 
 .student-table tr:last-child td { border-bottom: none; }
@@ -1015,7 +1045,7 @@ ul, ol { list-style: none; }
 }
 
 .login-logo p {
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   color: var(--text-muted);
   text-align: center;
 }
@@ -1050,16 +1080,16 @@ ul, ol { list-style: none; }
 .credential-info { min-width: 0; flex: 1; }
 
 .credential-username {
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: 0.875rem;
+  font-weight: 650;
   color: var(--text-brand);
   font-family: 'JetBrains Mono', monospace;
 }
 
 .credential-password {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--text-muted);
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
   margin-top: 2px;
 }
 
@@ -1191,7 +1221,7 @@ ul, ol { list-style: none; }
   background: transparent;
   color: var(--text-muted);
   font: inherit;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 750;
   line-height: 1.15;
   cursor: pointer;
@@ -1205,8 +1235,8 @@ ul, ol { list-style: none; }
 .data-mode-option span {
   display: block;
   margin-top: 2px;
-  font-size: 0.625rem;
-  font-weight: 600;
+  font-size: 0.75rem;
+  font-weight: 650;
   color: inherit;
   opacity: 0.78;
 }
@@ -1242,7 +1272,7 @@ ul, ol { list-style: none; }
   width: fit-content;
   border-radius: 999px;
   padding: 3px 8px;
-  font-size: 0.625rem;
+  font-size: 0.6875rem;
   font-weight: 800;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -1279,8 +1309,8 @@ ul, ol { list-style: none; }
 
 .demo-data-notice p {
   margin-top: 3px;
-  font-size: 0.8125rem;
-  line-height: 1.55;
+  font-size: 0.875rem;
+  line-height: 1.6;
 }
 
 .real-data-error {
@@ -1333,7 +1363,7 @@ ul, ol { list-style: none; }
   color: var(--brand-accent);
   background: hsla(245, 62%, 60%, 0.10);
   border: 1px solid hsla(245, 80%, 78%, 0.24);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
 }
 
 .synthetic-category-label {
@@ -1369,5 +1399,39 @@ ul, ol { list-style: none; }
 
   .data-mode-option {
     min-width: 0;
+  }
+}
+
+
+/* Typography guardrail: never fall back to browser serif defaults. */
+button,
+input,
+textarea,
+select,
+table,
+.data-mode-option,
+.data-status-pill {
+  font-family: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+}
+
+.font-mono,
+code {
+  font-family: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+}
+
+@media (max-width: 640px) {
+  html { font-size: 16px; }
+
+  h1 { font-size: 1.375rem; }
+  h2 { font-size: 1.25rem; }
+
+  .student-table {
+    font-size: 0.875rem;
+  }
+
+  .student-table th,
+  .student-table td {
+    padding-left: 14px;
+    padding-right: 14px;
   }
 }
