@@ -64,9 +64,9 @@ export default function GuruLoginPage() {
         <div
           className="mb-4 p-3 rounded-lg text-xs"
           style={{
-            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-            color: '#60a5fa',
-            border: '1px solid rgba(59, 130, 246, 0.25)',
+            backgroundColor: 'hsla(245, 62%, 60%, 0.10)',
+            color: 'var(--brand-accent)',
+            border: '1px solid hsla(245, 80%, 78%, 0.28)',
           }}
         >
           <div className="flex items-center justify-between">
@@ -81,7 +81,7 @@ export default function GuruLoginPage() {
                 setPassword('demo1234');
               }}
               className="text-xs underline hover:text-white"
-              style={{ cursor: 'pointer', background: 'none', border: 'none', color: '#93c5fd' }}
+              style={{ cursor: 'pointer', background: 'none', border: 'none', color: 'var(--brand-accent)' }}
             >
               Isi Otomatis
             </button>
