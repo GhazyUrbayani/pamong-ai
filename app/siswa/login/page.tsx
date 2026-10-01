@@ -83,8 +83,8 @@ export default function SiswaLoginPage() {
         <div
           className="mb-4 p-3 rounded-lg text-xs"
           style={{
-            backgroundColor: 'rgba(59, 130, 246, 0.08)',
-            border: '1px solid rgba(59, 130, 246, 0.25)',
+            backgroundColor: 'hsla(245, 62%, 60%, 0.08)',
+            border: '1px solid hsla(245, 80%, 78%, 0.24)',
           }}
         >
           <div className="text-xs font-semibold text-brand mb-2">
