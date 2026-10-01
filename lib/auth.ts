@@ -30,23 +30,26 @@ function getSecret(): Uint8Array {
     return cachedSecret;
   }
 
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error(
-      '[auth] JWT_SECRET is not set. Refusing to issue or verify tokens without one — ' +
-        'set JWT_SECRET to a long random string before starting in production.'
+  // This repository is a competition MVP. The login pages expose demo
+  // credentials publicly, so a stable fallback is allowed only while MVP mode is
+  // enabled. Set PAMONG_MVP_MODE=false in any non-demo deployment; that restores
+  // the strict requirement for JWT_SECRET.
+  const mvpMode = process.env.PAMONG_MVP_MODE !== 'false';
+  if (mvpMode) {
+    console.warn(
+      '[auth] JWT_SECRET is not set. Using the competition-MVP signing key. ' +
+        'This is demo access only; set JWT_SECRET and PAMONG_MVP_MODE=false for non-demo use.'
     );
+    cachedSecret = new TextEncoder().encode(
+      'pamong-ai-competition-mvp-demo-signing-key-v1-only-not-for-production-use'
+    );
+    return cachedSecret;
   }
 
-  // Development: a random per-process secret. Costs a re-login after each restart,
-  // which is cheap, and keeps a guessable constant out of the codebase entirely.
-  const generated = new Uint8Array(32);
-  crypto.getRandomValues(generated);
-  console.warn(
-    '[auth] JWT_SECRET is not set. Using a random per-process secret; logins end when ' +
-      'the dev server restarts. Set JWT_SECRET in .env.local to keep sessions across restarts.'
+  throw new Error(
+    '[auth] JWT_SECRET is not set and PAMONG_MVP_MODE=false. ' +
+      'Set JWT_SECRET to a long random string before starting a non-demo deployment.'
   );
-  cachedSecret = generated;
-  return cachedSecret;
 }
 
 export async function signTeacherToken(payload: TeacherJWT): Promise<string> {
