@@ -5,7 +5,7 @@ import { messageQueries } from '@/db/queries/messages';
 import { studentQueries } from '@/db/queries/students';
 import { sessionQueries } from '@/db/queries/sessions';
 import { ChatResponse, Message, QuestionCategory } from '@/types';
-import { FIXED_RETRIEVAL_REPLIES, QUESTION_CATEGORY_RUBRIC, belongsToConversation, hasQuota, summarizeQuestionDistribution } from '@/lib/mvp-policy';
+import { FIXED_RETRIEVAL_REPLIES, QUESTION_CATEGORY_RUBRIC, belongsToConversation, runWithQuotaGate, summarizeQuestionDistribution } from '@/lib/mvp-policy';
 import aiThemes from '@/config/ai-themes.json';
 
 const RAG_SYSTEM_PROMPT=`Kamu adalah asisten AI bernama {AI_FULL_NAME} untuk mata pelajaran {SUBJECT}.
@@ -30,11 +30,16 @@ export class ChatService{
   constructor(private llm:LLMService=getLLMService(),private rag:RAGService=getRAGService(),private classifier:ClassifierService=getClassifierService()){}
   async chat(input:ChatInput):Promise<ChatResponse>{
     const {studentId,sessionId,message}=input; const session=await sessionQueries.getById(sessionId); if(!session)throw new Error('Sesi tidak ditemukan.');
-    const used=(await studentQueries.getMessageCount(studentId))?.count??0;
-    if(!hasQuota(used,session.quotaPerStudent)) return {reply:`Kamu sudah menggunakan ${used} dari ${session.quotaPerStudent} pesan untuk sesi ini. Terima kasih sudah belajar bersama! 🎉`,questionLevel:'unclassified',classificationProvenance:'not_run',quotaRemaining:0,sources:[],degraded:false,aiProvenance:'application'};
-    const theme=(aiThemes as Record<string,typeof aiThemes.umum>)[session.aiTheme]??aiThemes.umum;
-    const [retrieval,classification]=await Promise.all([this.rag.retrieve(sessionId,message),this.classifier.classify(message)]);
+    // Validate the student's session boundary before quota counting or provider work.
     const student=await studentQueries.getById(studentId); if(!student||student.sessionId!==sessionId)throw new Error('Siswa tidak sesuai dengan sesi.');
+    const used=(await studentQueries.getMessageCount(studentId))?.count??0;
+    const providerWork=await runWithQuotaGate(used,session.quotaPerStudent,()=>Promise.all([
+      this.rag.retrieve(sessionId,message),
+      this.classifier.classify(message),
+    ]));
+    if(!providerWork.allowed) return {reply:`Kamu sudah menggunakan ${used} dari ${session.quotaPerStudent} pesan untuk sesi ini. Terima kasih sudah belajar bersama! 🎉`,questionLevel:'unclassified',classificationProvenance:'not_run',quotaRemaining:0,sources:[],degraded:false,aiProvenance:'application'};
+    const theme=(aiThemes as Record<string,typeof aiThemes.umum>)[session.aiTheme]??aiThemes.umum;
+    const [retrieval,classification]=providerWork.value;
     let reply:string; let aiProvenance:ChatResponse['aiProvenance']; let sources:string[]=[];
     if(retrieval.status!=='ok'){reply=FIXED_RETRIEVAL_REPLIES[retrieval.status]; aiProvenance='application';}
     else{
