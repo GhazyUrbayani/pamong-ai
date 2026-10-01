@@ -15,22 +15,39 @@ export async function GET(
     if (payload.role !== 'teacher') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     const { id } = await params;
-    let result;
-    let mvpDemo = false;
+    const mode = new URL(req.url).searchParams.get('mode') === 'real' ? 'real' : 'demo';
+
+    if (mode === 'demo') {
+      const result = getMvpDemoSessionWithStudents(id);
+      if (!result) return NextResponse.json({ error: 'Sesi demo tidak ditemukan.' }, { status: 404 });
+      return NextResponse.json({
+        ...result,
+        dataMode: 'demo',
+        dataProvenance: 'synthetic',
+      });
+    }
+
     try {
       const { getSessionService } = await import('@/services/session.service');
-      result = await getSessionService().getSessionWithStudents(id);
-    } catch {
-      result = getMvpDemoSessionWithStudents(id);
-      mvpDemo = true;
-    }
+      const result = await getSessionService().getSessionWithStudents(id);
 
-    if (!result) return NextResponse.json({ error: 'Sesi tidak ditemukan.' }, { status: 404 });
-    if (result.session.teacherId !== payload.sub) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+      if (!result) return NextResponse.json({ error: 'Sesi tidak ditemukan.' }, { status: 404 });
+      if (result.session.teacherId !== payload.sub) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
 
-    return NextResponse.json({ ...result, mvpDemo, dataProvenance: mvpDemo ? 'synthetic' : 'database' });
+      return NextResponse.json({
+        ...result,
+        dataMode: 'real',
+        dataProvenance: 'database',
+      });
+    } catch (err) {
+      console.error('[api/sesi/[id] GET real]', err);
+      return NextResponse.json(
+        { error: 'Real Data belum tersedia pada deployment ini.', code: 'REAL_DATA_UNAVAILABLE' },
+        { status: 503 }
+      );
+    }
   } catch {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
