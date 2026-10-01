@@ -40,3 +40,9 @@ jobs:
         env:
           JWT_SECRET: ci-only-secret-not-for-production
           PAMONG_DEMO_MODE: "false"
+
+      - name: Demo smoke flow
+        run: node scripts/smoke-demo.mjs
+        env:
+          JWT_SECRET: ci-only-secret-not-for-production
+          PAMONG_DEMO_MODE: "true"
