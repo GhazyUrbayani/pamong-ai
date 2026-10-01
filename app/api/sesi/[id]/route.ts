@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractBearerToken } from '@/lib/auth';
-import { getSessionService } from '@/services/session.service';
+import { getMvpDemoSessionWithStudents } from '@/lib/mvp-demo-data';
 import { TeacherJWT } from '@/types';
-
-const sessionService = getSessionService();
 
 export async function GET(
   req: NextRequest,
@@ -17,14 +15,22 @@ export async function GET(
     if (payload.role !== 'teacher') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     const { id } = await params;
-    const result = await sessionService.getSessionWithStudents(id);
+    let result;
+    let mvpDemo = false;
+    try {
+      const { getSessionService } = await import('@/services/session.service');
+      result = await getSessionService().getSessionWithStudents(id);
+    } catch {
+      result = getMvpDemoSessionWithStudents(id);
+      mvpDemo = true;
+    }
 
     if (!result) return NextResponse.json({ error: 'Sesi tidak ditemukan.' }, { status: 404 });
     if (result.session.teacherId !== payload.sub) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    return NextResponse.json(result);
+    return NextResponse.json({ ...result, mvpDemo, dataProvenance: mvpDemo ? 'synthetic' : 'database' });
   } catch {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -52,6 +58,8 @@ export async function DELETE(
     if (payload.role !== 'teacher') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     const { id } = await params;
+    const { getSessionService } = await import('@/services/session.service');
+    const sessionService = getSessionService();
     const result = await sessionService.getSessionWithStudents(id);
 
     if (!result) return NextResponse.json({ error: 'Sesi tidak ditemukan.' }, { status: 404 });
