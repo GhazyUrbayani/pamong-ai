@@ -40,6 +40,18 @@ try {
   assert(teacher.token, 'Teacher token missing.');
   assert(teacher.mvpDemo === true, 'Teacher login is not marked as MVP demo access.');
 
+  const demoSessions = await request('/api/sesi?mode=demo', {
+    headers: { Authorization: 'Bearer ' + teacher.token },
+  });
+  assert(demoSessions.dataProvenance === 'synthetic', 'Demo sessions are not marked synthetic.');
+  assert(demoSessions.sessions?.length === 3, 'Expected three fixed synthetic MVP sessions.');
+
+  const realSessions = await request('/api/sesi?mode=real', {
+    headers: { Authorization: 'Bearer ' + teacher.token },
+  });
+  assert(realSessions.dataProvenance === 'database', 'Real Data mode did not use the database path.');
+  assert(realSessions.sessions?.length >= 1, 'Real Data mode returned no seeded sessions.');
+
   const student = await request('/api/auth/siswa', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -59,11 +71,12 @@ try {
   assert(chat.questionLevel === 'unclassified', 'Demo classifier was counted as a valid category.');
   assert(chat.classificationProvenance === 'demo', 'Demo classifier provenance is not explicit.');
 
-  const transcript = await request('/api/guru/student-chat/' + student.student.id, {
+  const transcript = await request('/api/guru/student-chat/' + student.student.id + '?mode=demo', {
     headers: { Authorization: 'Bearer ' + teacher.token },
   });
   assert(transcript.messages.some((m) => m.classificationProvenance === 'synthetic'), 'Seed labels are not marked synthetic.');
 
+  console.log('Demo/Real data mode separation passed.');
   console.log('Demo smoke flow passed.');
   console.log('MVP JWT fallback was exercised without JWT_SECRET.');
   console.log('Seeded transcripts are synthetic.');
