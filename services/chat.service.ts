@@ -40,7 +40,7 @@ export class ChatService{
     else{
       const q=style(classification.questionCategory);
       const system=RAG_SYSTEM_PROMPT.replace('{AI_FULL_NAME}',theme.fullName).replace('{SUBJECT}',session.subject).replace('{CONTEXT}',retrieval.contextText).replace('{QUESTION_CATEGORY_LABEL}',q.label).replace('{QUESTION_STYLE_INSTRUCTION}',q.instruction);
-      let history:Message[]=student.roomCode?await messageQueries.getByRoom(sessionId,student.roomCode):await messageQueries.getBySoloStudent(studentId);
+      const history:Message[]=student.roomCode?await messageQueries.getByRoom(sessionId,student.roomCode):await messageQueries.getBySoloStudent(studentId);
       const safe=history.filter(m=>belongsToConversation(m,{sessionId,studentId,roomCode:student.roomCode??null})).slice(-6).map(m=>({role:m.role as 'user'|'assistant',content:m.content}));
       const generated=await this.llm.chatWithMeta([{role:'system',content:system},...safe,{role:'user',content:message}],{temperature:.4,maxTokens:800});
       reply=generated.text; aiProvenance=generated.provenance; sources=retrieval.sources;

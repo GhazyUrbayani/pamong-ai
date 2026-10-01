@@ -4,11 +4,13 @@ import {Message,StudentStats} from '@/types';
 import {Badge} from '@/components/ui/Badge';
 
 export function StudentTable({students,quotaTotal}:{students:StudentStats[];quotaTotal:number}){
-  const [filter,setFilter]=useState<'all'|'active'|'unknown'|'inactive'>('all'); const [search,setSearch]=useState(''); const [selected,setSelected]=useState<StudentStats|null>(null); const [messages,setMessages]=useState<Message[]>([]); const [loading,setLoading]=useState(false);
+  type FilterKey = 'all'|'active'|'unknown'|'inactive';
+  const filters: Array<{key:FilterKey;label:string}> = [{key:'all',label:'Semua'},{key:'active',label:'Sudah bertanya'},{key:'unknown',label:'Ada belum terklasifikasi'},{key:'inactive',label:'Belum aktif'}];
+  const [filter,setFilter]=useState<FilterKey>('all'); const [search,setSearch]=useState(''); const [selected,setSelected]=useState<StudentStats|null>(null); const [messages,setMessages]=useState<Message[]>([]); const [loading,setLoading]=useState(false);
   const filtered=students.filter(s=>{const match=s.displayName.toLowerCase().includes(search.toLowerCase())||s.username.toLowerCase().includes(search.toLowerCase()); if(!match)return false; if(filter==='active')return s.chatUsed>0; if(filter==='unknown')return s.unclassified>0; if(filter==='inactive')return s.chatUsed===0; return true;});
   const open=async(s:StudentStats)=>{setSelected(s);setLoading(true);try{const token=localStorage.getItem('guru_token');const r=await fetch('/api/guru/student-chat/'+s.id,{headers:{Authorization:'Bearer '+token}});if(r.ok)setMessages((await r.json()).messages||[]);}finally{setLoading(false);}};
   return <div className="flex flex-col gap-4">
-    <div className="flex flex-wrap gap-2 items-center">{[['all','Semua'],['active','Sudah bertanya'],['unknown','Ada belum terklasifikasi'],['inactive','Belum aktif']].map(([k,l])=><button key={k} onClick={()=>setFilter(k as any)} className="btn btn-secondary" style={{width:'auto',minHeight:36}}>{l}</button>)}<input className="input" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Cari siswa..." style={{maxWidth:300}}/></div>
+    <div className="flex flex-wrap gap-2 items-center">{filters.map(item=><button key={item.key} onClick={()=>setFilter(item.key)} className="btn btn-secondary" style={{width:'auto',minHeight:36}}>{item.label}</button>)}<input className="input" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Cari siswa..." style={{maxWidth:300}}/></div>
     <div className="card" style={{padding:0,overflowX:'auto'}}><table className="student-table"><thead><tr><th>Siswa</th><th>Chat</th><th>Distribusi pertanyaan valid</th><th>Belum terklasifikasi</th><th>Catatan</th></tr></thead><tbody>{filtered.map(s=>{const d=s.validClassified; const p=(n:number)=>d?Math.round(n/d*100):0; return <tr key={s.id} onClick={()=>open(s)} style={{cursor:'pointer'}}>
       <td><strong>{s.displayName}</strong><div className="font-mono text-xs text-muted">{s.username}</div></td>
       <td>{s.chatUsed} / {quotaTotal}</td>
