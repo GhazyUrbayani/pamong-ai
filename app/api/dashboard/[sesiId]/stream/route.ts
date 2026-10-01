@@ -1,10 +1,7 @@
 import { NextRequest } from 'next/server';
 import { verifyToken, extractBearerToken } from '@/lib/auth';
-import { getChatService } from '@/services/chat.service';
-import { sessionQueries } from '@/db/queries/sessions';
+import { getMvpDemoSession, getMvpDemoStats } from '@/lib/mvp-demo-data';
 import { TeacherJWT } from '@/types';
-
-const chatService = getChatService();
 
 /**
  * SSE endpoint for real-time dashboard updates.
@@ -34,12 +31,27 @@ export async function GET(
 
     const { sesiId } = await params;
 
-    // Scope the stream to sessions this teacher owns. Without this, a teacher role
-    // alone would stream any class's per-student analytics to anyone who knows a
-    // session id — and seeded session ids are predictable.
-    const session = sessionQueries.getById(sesiId);
-    if (!session) return new Response('Not Found', { status: 404 });
-    if (session.teacherId !== payload.sub) return new Response('Forbidden', { status: 403 });
+    // Prefer the database path. If native SQLite is unavailable (for example on
+    // a Cloudflare Workers MVP deployment), fall back to explicit synthetic data.
+    let mvpDemo = false;
+    let statsProvider: () => Promise<unknown>;
+
+    try {
+      const [{ sessionQueries }, { getChatService }] = await Promise.all([
+        import('@/db/queries/sessions'),
+        import('@/services/chat.service'),
+      ]);
+      const session = await sessionQueries.getById(sesiId);
+      if (!session) return new Response('Not Found', { status: 404 });
+      if (session.teacherId !== payload.sub) return new Response('Forbidden', { status: 403 });
+      const chatService = getChatService();
+      statsProvider = () => chatService.computeStudentStats(sesiId);
+    } catch {
+      const session = getMvpDemoSession(sesiId);
+      if (!session) return new Response('Not Found', { status: 404 });
+      mvpDemo = true;
+      statsProvider = async () => getMvpDemoStats(sesiId);
+    }
 
     const stream = new ReadableStream({
       async start(controller) {
@@ -47,19 +59,23 @@ export async function GET(
 
         const sendStats = async () => {
           try {
-            const stats = await chatService.computeStudentStats(sesiId);
-            const data = `data: ${JSON.stringify(stats)}\n\n`;
+            const stats = await statsProvider();
+            const data = `data: ${JSON.stringify({
+              stats,
+              mvpDemo,
+              dataProvenance: mvpDemo ? 'synthetic' : 'database',
+            })}\n\n`;
             controller.enqueue(encoder.encode(data));
           } catch (err) {
             console.error('[SSE] Error computing stats:', err);
           }
         };
 
-        // Send immediately on connect
+        // Send immediately on connect.
         await sendStats();
 
-        // Then poll every 3 seconds
-        const interval = setInterval(sendStats, 3000);
+        // Real data polls frequently; synthetic MVP data is stable.
+        const interval = setInterval(sendStats, mvpDemo ? 30000 : 3000);
 
         // Heartbeat to keep connection alive
         const heartbeat = setInterval(() => {
