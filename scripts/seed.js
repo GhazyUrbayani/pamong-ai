@@ -86,7 +86,7 @@ function hasGeminiKey() {
  */
 async function embedChunks(chunks) {
   if (!hasGeminiKey()) {
-    return { vectors: chunks.map(mockEmbed), real: false };
+    if (process.env.PAMONG_DEMO_MODE !== 'true') throw new Error('No embedding provider configured. Set a key or PAMONG_DEMO_MODE=true.');\n    const vectors = chunks.map(mockEmbed);\n    return { vectors, real: false, provider: 'demo', model: 'heuristic-64-v1', dimensions: vectors[0]?.length || 64 };
   }
 
   try {
@@ -94,7 +94,7 @@ async function embedChunks(chunks) {
     const ai = new GoogleGenAI({
       apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY,
     });
-    const model = process.env.GEMINI_EMBEDDING_MODEL || 'text-embedding-004';
+    const model = process.env.GEMINI_EMBEDDING_MODEL || 'gemini-embedding-001';
 
     const response = await ai.models.embedContent({ model, contents: chunks });
     const vectors = (response.embeddings || []).map((e) => e.values);
@@ -102,10 +102,10 @@ async function embedChunks(chunks) {
     if (vectors.length !== chunks.length || vectors.some((v) => !v || !v.length)) {
       throw new Error('incomplete embedding response');
     }
-    return { vectors, real: true };
+    return { vectors, real: true, provider: 'gemini', model, dimensions: vectors[0]?.length || 0 };
   } catch (err) {
     console.warn(`[Seed] Gemini embedding failed (${err.message}); using heuristic vectors.`);
-    return { vectors: chunks.map(mockEmbed), real: false };
+    const vectors = chunks.map(mockEmbed);\n    return { vectors, real: false, provider: 'demo', model: 'heuristic-64-v1', dimensions: vectors[0]?.length || 64 };
   }
 }
 
@@ -115,16 +115,16 @@ async function seedModule(sessionId, filePath) {
   const chunks = chunkText(raw);
   if (chunks.length === 0) return { count: 0, real: false };
 
-  const { vectors, real } = await embedChunks(chunks);
+  const { vectors, real, provider, model, dimensions } = await embedChunks(chunks);
 
   db.prepare('DELETE FROM knowledge_chunks WHERE session_id = ?').run(sessionId);
 
   const insert = db.prepare(`
-    INSERT INTO knowledge_chunks (id, session_id, chunk_text, embedding_json, chunk_index)
-    VALUES (?, ?, ?, ?, ?)
+    INSERT INTO knowledge_chunks (id, session_id, chunk_text, embedding_json, chunk_index, embedding_provider, embedding_model, embedding_dimensions)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `);
   for (let i = 0; i < chunks.length; i++) {
-    insert.run(crypto.randomUUID(), sessionId, chunks[i], JSON.stringify(vectors[i]), i);
+    insert.run(crypto.randomUUID(), sessionId, chunks[i], JSON.stringify(vectors[i]), i, provider, model, dimensions);
   }
 
   return { count: chunks.length, real };
@@ -133,7 +133,7 @@ async function seedModule(sessionId, filePath) {
 loadEnvLocal();
 
 async function seed() {
-  console.log('[Seed] Seeding realistic Indonesian classroom & Bloom taxonomy chats...');
+  console.log('[Seed] Seeding realistic Indonesian classroom & question-category chats...');
 
   // Ensure tables exist
   db.exec(`
@@ -164,7 +164,10 @@ async function seed() {
       session_id TEXT NOT NULL REFERENCES sessions(id),
       chunk_text TEXT NOT NULL,
       embedding_json TEXT NOT NULL,
-      chunk_index INTEGER NOT NULL
+      chunk_index INTEGER NOT NULL,
+      embedding_provider TEXT,
+      embedding_model TEXT,
+      embedding_dimensions INTEGER
     );
 
     CREATE TABLE IF NOT EXISTS students (
@@ -185,6 +188,7 @@ async function seed() {
       role TEXT NOT NULL,
       content TEXT NOT NULL,
       question_level TEXT,
+      classification_provenance TEXT,
       created_at INTEGER NOT NULL
     );
   `);
@@ -209,7 +213,7 @@ async function seed() {
 
   const CLASSROOM_DATA = [
 
-    // ─── 4 SISWA TINGKAT ANALISIS (HOTS - 🟢 PROGRESIF) ─────────────────────────
+    // ─── 4 SISWA CONTOH PERTANYAAN PENERAPAN/PENALARAN ─────────────────────────
     {
       name: 'Ahmad Fauzi',
       username: 'ahmad.fauzi',
@@ -309,7 +313,7 @@ async function seed() {
       ],
     },
 
-    // ─── 7 SISWA TINGKAT PEMAHAMAN (MOTS - 🔵 KONSEPTUAL) ──────────────────────────
+    // ─── 7 SISWA CONTOH PERTANYAAN PENJELASAN ──────────────────────────
     {
       name: 'Siti Nurhaliza',
       username: 'siti.nurhaliza',
@@ -445,7 +449,7 @@ async function seed() {
       ],
     },
 
-    // ─── 4 SISWA TINGKAT HAFALAN (LOTS - 🟠 BUTUH BIMBINGAN) ──────────
+    // ─── 4 SISWA CONTOH PERTANYAAN FAKTA ──────────
     {
       name: 'Budi Santoso',
       username: 'budi.santoso',
@@ -670,14 +674,14 @@ async function seed() {
         const t = now - offset + j * 120000;
 
         db.prepare(`
-          INSERT INTO messages (id, session_id, student_id, room_code, role, content, question_level, created_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `).run(uId, sConf.id, studentId, null, 'user', c.user, c.level, t);
+          INSERT INTO messages (id, session_id, student_id, room_code, role, content, question_level, classification_provenance, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(uId, sConf.id, studentId, null, 'user', c.user, c.level, 'synthetic', t);
 
         db.prepare(`
           INSERT INTO messages (id, session_id, student_id, room_code, role, content, question_level, created_at)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `).run(aId, sConf.id, studentId, null, 'assistant', c.assistant, null, t + 1000);
+        `).run(aId, sConf.id, studentId, null, 'assistant', c.assistant, null, null, t + 1000);
       }
     }
   }

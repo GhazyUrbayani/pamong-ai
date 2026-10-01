@@ -36,11 +36,11 @@ Class metadata (title, subject, quota), plus the guardian-consent record: `guard
 
 ### Messages (`messages`)
 
-Every student question and every AI answer is stored in full, permanently, with `student_id`, `session_id`, `role`, the assigned Bloom level (`question_level`), and a millisecond timestamp. This is the most sensitive data the system holds: free text typed by a minor, which may contain anything the student chose to type, including personal information the schema never asked for.
+Every student question and every AI answer is stored in full, with `student_id`, `session_id`, `role`, the legacy-named question category field (`question_level`), `classification_provenance`, and a millisecond timestamp. The category describes question form; it is not a validated cognitive-level assessment. This is the most sensitive data the system holds: free text typed by a minor, which may contain anything the student chose to type, including personal information the schema never asked for.
 
 ### Module content (`knowledge_chunks`)
 
-Text extracted from the teacher's uploaded file, split into ~500-character chunks, with its embedding vector stored as a JSON string. Deleted and replaced when the teacher re-uploads for that session. The original uploaded file is not retained — only the extracted text.
+Text extracted from the teacher's uploaded file, split into ~500-character chunks, with its embedding vector stored as a JSON string plus embedding provider, model, and dimensions. Deleted and replaced when the teacher re-uploads for that session. The original uploaded file is not retained — only the extracted text.
 
 ### Not stored
 
