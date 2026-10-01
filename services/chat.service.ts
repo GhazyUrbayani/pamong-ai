@@ -1,10 +1,10 @@
 import { getLLMService, LLMService } from './llm.service';
-import { getRAGService, RAGService } from './rag.service';
+import { getRAGService, RAGService, RetrievalResult } from './rag.service';
 import { getClassifierService, ClassifierService } from './classifier.service';
 import { messageQueries } from '@/db/queries/messages';
 import { studentQueries } from '@/db/queries/students';
 import { sessionQueries } from '@/db/queries/sessions';
-import { ChatResponse, Message, QuestionCategory } from '@/types';
+import { ChatResponse, ClassificationResult, Message, QuestionCategory } from '@/types';
 import { FIXED_RETRIEVAL_REPLIES, QUESTION_CATEGORY_RUBRIC, belongsToConversation, runWithQuotaGate, summarizeQuestionDistribution } from '@/lib/mvp-policy';
 import aiThemes from '@/config/ai-themes.json';
 
@@ -39,7 +39,7 @@ export class ChatService{
     ]));
     if(!providerWork.allowed) return {reply:`Kamu sudah menggunakan ${used} dari ${session.quotaPerStudent} pesan untuk sesi ini. Terima kasih sudah belajar bersama! 🎉`,questionLevel:'unclassified',classificationProvenance:'not_run',quotaRemaining:0,sources:[],degraded:false,aiProvenance:'application'};
     const theme=(aiThemes as Record<string,typeof aiThemes.umum>)[session.aiTheme]??aiThemes.umum;
-    const [retrieval,classification]=providerWork.value;
+    const [retrieval,classification]=providerWork.value as [RetrievalResult, ClassificationResult];
     let reply:string; let aiProvenance:ChatResponse['aiProvenance']; let sources:string[]=[];
     if(retrieval.status!=='ok'){reply=FIXED_RETRIEVAL_REPLIES[retrieval.status]; aiProvenance='application';}
     else{
