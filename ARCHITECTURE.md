@@ -16,7 +16,7 @@ The keys must not be presented as C1–C6, LOTS/MOTS/HOTS, mastery, or learning 
 
 ## 3. Classification provenance is first-class
 
-`ClassifierService` calls `chatWithMeta()`. A real provider response must be an exact allowed key. Otherwise the message is `unclassified` with provenance such as `degraded`, `malformed`, or `error`.
+`ClassifierService` calls `chatWithMeta()`. A real provider response must be an exact allowed key. Otherwise the message is `unclassified` with explicit provenance such as `demo`, `unavailable`, `degraded` (legacy/future fallback), `malformed`, or `error`.
 
 Dashboard percentages use only `classification_provenance = 'model'`. Legacy rows with null provenance and synthetic seed rows are counted separately.
 
@@ -48,13 +48,13 @@ The generation step is still prompt-grounded; there is no post-generation entail
 
 ## 7. Provider failure and explicit demo mode
 
-Without a usable provider, normal mode returns a clear unavailable response. An offline heuristic exists only when `PAMONG_DEMO_MODE=true`, and its output is labelled as demo/degraded.
+Without a usable provider, normal mode returns a clear unavailable response. An offline heuristic exists only when `PAMONG_DEMO_MODE=true`, and its classification output is labelled `demo`.
 
-Classifier statistics exclude degraded responses.
+Classifier statistics include only `model` provenance. Demo, unavailable, degraded, malformed, error, synthetic, and legacy rows remain outside the valid denominator.
 
 ## 8. Quota gate precedes model work
 
-The quota check happens before retrieval/classification/generation. An exhausted quota therefore prevents further model calls.
+Student/session ownership is validated first. The quota gate then wraps retrieval/classification provider work, so an exhausted quota prevents those provider calls.
 
 ## 9. Conversation isolation
 
@@ -67,3 +67,8 @@ SQLite plus in-process cosine similarity is appropriate for the single-instance 
 ## 11. Evaluation remains future work
 
 The MVP needs a teacher-labelled question set, classification agreement/error reporting, retrieval/refusal calibration, and classroom usability testing before stronger educational claims are appropriate.
+
+
+## 12. Login is an MVP demonstration boundary
+
+The login UI is explicitly labelled as competition-MVP access. Teacher login uses the documented demo identity. Student logins normally verify generated credentials against SQLite; the four documented seeded student identities have a stateless fallback only when SQLite cannot load. This fallback is not presented as production authentication and does not make downstream SQLite-backed routes Workers-compatible.
