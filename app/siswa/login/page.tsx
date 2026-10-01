@@ -32,9 +32,20 @@ export default function SiswaLoginPage() {
         body: JSON.stringify({ username, password }),
       });
 
-      const data = await res.json();
+      const raw = await res.text();
+      let data: any = {};
+      if (raw) {
+        try {
+          data = JSON.parse(raw);
+        } catch {
+          // Some hosting/runtime failures can return HTML or an empty body.
+          // Keep the UI actionable instead of exposing a JSON parser exception.
+        }
+      }
       if (!res.ok) {
-        throw new Error(data.error || 'Login gagal.');
+        throw new Error(
+          data.error || `Login gagal (HTTP ${res.status}). Backend tidak mengembalikan respons JSON yang valid.`
+        );
       }
 
       const studentData = {
