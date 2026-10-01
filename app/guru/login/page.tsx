@@ -56,7 +56,7 @@ export default function GuruLoginPage() {
           <div className="login-logo-icon">🦉</div>
           <div>
             <h1>PAMONG AI</h1>
-            <p>Portal Guru & Fasilitator Pembelajaran</p>
+            <p>Akses Demo MVP — Portal Guru</p>
           </div>
         </div>
 
@@ -70,7 +70,7 @@ export default function GuruLoginPage() {
         >
           <div className="flex items-center justify-between">
             <div>
-              <span className="font-semibold">Akun Demo: </span>
+              <span className="font-semibold">Akun Demo MVP: </span>
               <code>guru@pamong-ai.id</code> / <code>demo1234</code>
             </div>
             <button
@@ -99,6 +99,10 @@ export default function GuruLoginPage() {
             {error}
           </div>
         )}
+
+        <p className="text-xs text-muted mb-4">
+          Akses ini hanya untuk demonstrasi MVP kompetisi. Bukan sistem autentikasi production.
+        </p>
 
         <form onSubmit={handleLogin}>
           <div className="field">
@@ -144,7 +148,7 @@ export default function GuruLoginPage() {
                   <span>Memverifikasi...</span>
                 </div>
               ) : (
-                'Masuk ke Ruang Guru ➔'
+                'Masuk Demo MVP ➔'
               )}
             </button>
           </div>
