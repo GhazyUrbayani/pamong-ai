@@ -9,7 +9,7 @@ interface OnboardingTourProps {
 }
 
 export function OnboardingTour({ isOpen, onClose, onQuickStudentDemo }: OnboardingTourProps) {
-  const [activeTab, setActiveTab] = useState<'flow' | 'bloom' | 'demo'>('flow');
+  const [activeTab, setActiveTab] = useState<'flow' | 'categories' | 'demo'>('flow');
   const [currentStep, setCurrentStep] = useState(0);
 
   if (!isOpen) return null;
@@ -19,7 +19,7 @@ export function OnboardingTour({ isOpen, onClose, onQuickStudentDemo }: Onboardi
       title: 'Buat Sesi & Unggah Modul (RAG Anti-Halusinasi)',
       badge: 'Langkah 1',
       icon: '📚',
-      desc: 'Guru membuat sesi kelas dan mengunggah dokumen materi (PDF/TXT). AI Tutor mengindeks konten tersebut sehingga seluruh jawaban siswa 100% terkunci pada modul resmi tanpa keluar topik atau halusinasi.',
+      desc: 'Guru membuat sesi kelas dan mengunggah dokumen materi (PDF/TXT). AI Tutor mengindeks konten tersebut sehingga seluruh jawaban siswa dibatasi pada modul resmi dengan instruksi grounding; kualitasnya tetap perlu diuji.',
       highlight: 'AI menolak menjawab hal di luar modul pembelajaran kelas.',
     },
     {
@@ -30,10 +30,10 @@ export function OnboardingTour({ isOpen, onClose, onQuickStudentDemo }: Onboardi
       highlight: 'Kode Room Kolaborasi untuk belajar bareng teman sejawat.',
     },
     {
-      title: 'Pantau Distribusi Kognitif Bloom (Real-time)',
+      title: 'Pantau Distribusi Kognitif kategori pertanyaan (Real-time)',
       badge: 'Langkah 3',
       icon: '📊',
-      desc: 'Saat siswa berdiskusi dengan Pamong AI, setiap pertanyaan diklasifikasikan ke 3 tingkat kognitif: Hafalan (C1-C2), Pemahaman (C3-C4), dan Analisis (C5-C6). Dashboard guru diperbarui instan via Server-Sent Events.',
+      desc: 'Saat siswa berdiskusi dengan Pamong AI, setiap pertanyaan diklasifikasikan ke 3 jenis pertanyaan: Hafalan (C1-C2), Pemahaman (C3-C4), dan Analisis (C5-C6). Dashboard guru diperbarui instan via Server-Sent Events.',
       highlight: 'Deteksi dini: langsung tahu siswa mana yang berpikir kritis vs terjebak hafalan.',
     },
     {
@@ -47,7 +47,7 @@ export function OnboardingTour({ isOpen, onClose, onQuickStudentDemo }: Onboardi
 
   const TAB_ITEMS = [
     { key: 'flow' as const, label: 'Alur Kerja (4 Langkah)', icon: '🚀' },
-    { key: 'bloom' as const, label: 'Taksonomi Bloom', icon: '🧠' },
+    { key: 'categories' as const, label: 'Taksonomi kategori pertanyaan', icon: '🧠' },
     { key: 'demo' as const, label: 'Panduan Demo Siswa', icon: '🎭' },
   ];
 
@@ -113,7 +113,7 @@ export function OnboardingTour({ isOpen, onClose, onQuickStudentDemo }: Onboardi
                 Panduan Guru — Pamong AI
               </h2>
               <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                Platform AI Tutor Pembelajaran Taksonomi Bloom Berbasis Modul
+                Platform AI Tutor Pembelajaran Taksonomi kategori pertanyaan Berbasis Modul
               </p>
             </div>
           </div>
@@ -263,44 +263,44 @@ export function OnboardingTour({ isOpen, onClose, onQuickStudentDemo }: Onboardi
                     {currentStep + 1} / {STEPS.length}
                   </span>
                   <button
-                    onClick={() => currentStep < STEPS.length - 1 ? setCurrentStep((p) => p + 1) : setActiveTab('bloom')}
+                    onClick={() => currentStep < STEPS.length - 1 ? setCurrentStep((p) => p + 1) : setActiveTab('categories')}
                     className="btn btn-primary"
                     style={{ width: 'auto', minHeight: '34px', padding: '6px 16px', fontSize: '0.8125rem' }}
                   >
-                    {currentStep < STEPS.length - 1 ? 'Berikutnya →' : 'Lihat Status Bloom →'}
+                    {currentStep < STEPS.length - 1 ? 'Berikutnya →' : 'Lihat Status kategori pertanyaan →'}
                   </button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* TAB: Bloom */}
-          {activeTab === 'bloom' && (
+          {/* TAB: kategori pertanyaan */}
+          {activeTab === 'categories' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '4px' }}>
-                Pamong AI menggunakan <strong>Gemini 3.7 Flash</strong> untuk mengklasifikasikan setiap pertanyaan siswa secara real-time ke dalam 3 spektrum Taksonomi Bloom:
+                Pamong AI menggunakan <strong>Gemini 3.7 Flash</strong> untuk mengklasifikasikan setiap pertanyaan siswa secara real-time ke dalam 3 spektrum Taksonomi kategori pertanyaan:
               </p>
 
-              <BloomLevelCard
+              <kategori pertanyaanLevelCard
                 color="var(--status-green)"
-                title="Analisis / HOTS (C5–C6)"
+                title="Analisis / penerapan/penalaran (C5–C6)"
                 desc="Siswa bertanya mengenai perbandingan sebab-akibat mendalam, evaluasi dampak, atau studi kasus kritis."
                 example={'"Bagaimana jika intensitas cahaya dinaikkan tetapi CO₂ terbatas, apakah laju fotosintesis tetap naik?"'}
-                tier="Tingkat Tinggi (HOTS)"
+                tier="Tingkat Tinggi (penerapan/penalaran)"
               />
-              <BloomLevelCard
+              <kategori pertanyaanLevelCard
                 color="var(--status-blue)"
-                title="Pemahaman / MOTS (C3–C4)"
+                title="Pemahaman / pertanyaan penjelasan (C3–C4)"
                 desc='Siswa bertanya mengenai mekanisme proses, penjelasan konsep sistem, alasan "mengapa", atau fungsi keterkaitan.'
                 example={'"Mengapa reaksi terang membutuhkan air (H₂O) dan apa fungsi fotolisis?"'}
-                tier="Tingkat Sedang (MOTS)"
+                tier="Tingkat Sedang (pertanyaan penjelasan)"
               />
-              <BloomLevelCard
+              <kategori pertanyaanLevelCard
                 color="var(--status-yellow)"
-                title="Hafalan / LOTS (C1–C2)"
+                title="Hafalan / pertanyaan fakta (C1–C2)"
                 desc="Siswa hanya menanyakan definisi kata, rumus singkat, atau hafalan nama tanpa menggali makna konsep lebih lanjut."
                 example={'"Apa rumus glukosa?" • "Di mana letak klorofil?"'}
-                tier="Tingkat Dasar (LOTS)"
+                tier="Tingkat Dasar (pertanyaan fakta)"
               />
             </div>
           )}
@@ -323,9 +323,9 @@ export function OnboardingTour({ isOpen, onClose, onQuickStudentDemo }: Onboardi
                   Uji dan peragakan bagaimana siswa berinteraksi dengan AI Tutor di ruang belajar:
                 </p>
                 <ol style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', listStyle: 'decimal', paddingLeft: '20px', lineHeight: 2 }}>
-                  <li><strong>Pratinjau 1-Klik:</strong> Buka ruang chat sebagai <code style={{ color: 'var(--brand-accent)', fontWeight: 600 }}>Ahmad Fauzi</code> (siswa HOTS).</li>
+                  <li><strong>Pratinjau 1-Klik:</strong> Buka ruang chat sebagai <code style={{ color: 'var(--brand-accent)', fontWeight: 600 }}>Ahmad Fauzi</code> (siswa penerapan/penalaran).</li>
                   <li><strong>Coba Pertanyaan Pemantik:</strong> Klik prompt chip yang tersedia atau ketik pertanyaan biologi kritis.</li>
-                  <li><strong>Cek Halaman Progres:</strong> Buka tab <em>Progress</em> di navigasi bawah siswa untuk melihat grafik Bloom pribadi.</li>
+                  <li><strong>Cek Halaman Progres:</strong> Buka tab <em>Progress</em> di navigasi bawah siswa untuk melihat grafik kategori pertanyaan pribadi.</li>
                 </ol>
 
                 <div
@@ -385,8 +385,8 @@ export function OnboardingTour({ isOpen, onClose, onQuickStudentDemo }: Onboardi
   );
 }
 
-/* ── Bloom Level Card ──────────────────────────────────────── */
-function BloomLevelCard({
+/* ── kategori pertanyaan Level Card ──────────────────────────────────────── */
+function kategori pertanyaanLevelCard({
   color,
   title,
   desc,

@@ -135,7 +135,7 @@ export default function SiswaChatView() {
       // Update the user message with classified questionLevel
       setMessages((prev) =>
         prev.map((m) =>
-          m.id === optimisticId ? { ...m, questionLevel: data.questionLevel } : m
+          m.id === optimisticId ? { ...m, questionLevel: data.questionLevel, classificationProvenance: data.classificationProvenance } : m
         )
       );
 
@@ -242,11 +242,9 @@ export default function SiswaChatView() {
             ⚠️
           </span>
           <span>
-            <strong>Mode contoh — bukan jawaban AI.</strong> Tidak ada model bahasa
-            yang aktif, jadi balasan di bawah diambil dari teks contoh bawaan aplikasi
-            dan <strong>tidak dibaca dari modul gurumu</strong>. Jangan dipakai untuk
-            belajar. Pengelola perlu menyetel <code>GEMINI_API_KEY</code> di{' '}
-            <code>.env.local</code>.
+            <strong>Layanan AI tidak berjalan normal.</strong> Balasan ini berasal dari mode demo
+            atau pesan kegagalan provider, bukan jawaban model yang dapat dinilai sebagai grounded.
+            Mode seperti ini tidak dihitung sebagai klasifikasi pertanyaan yang valid.
           </span>
         </div>
       )}
@@ -372,8 +370,8 @@ export default function SiswaChatView() {
             >
               <p className="font-semibold text-brand mb-1">💡 Tips Belajar:</p>
               <p>
-                Tanyakan pertanyaan bertingkat: mulai dari definisi konsep, bagaimana
-                prosesnya, hingga analisis & contoh penerapannya di dunia nyata!
+                Variasikan pertanyaanmu: fakta, penjelasan proses, serta penerapan atau
+                penalaran. Kategori ini menggambarkan bentuk pertanyaan, bukan nilai kemampuan.
               </p>
             </div>
           </div>

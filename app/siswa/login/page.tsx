@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import { InstallPrompt } from '@/components/pwa/InstallPrompt';
 
 const DEMO_PRESETS = [
-  { name: 'Ahmad Fauzi (HOTS / Analisis)', username: 'ahmad.fauzi', password: 'belajar123' },
-  { name: 'Dewi Lestari (HOTS / Analisis)', username: 'dewi.lestari', password: 'belajar123' },
+  { name: 'Ahmad Fauzi (penerapan/penalaran / Analisis)', username: 'ahmad.fauzi', password: 'belajar123' },
+  { name: 'Dewi Lestari (penerapan/penalaran / Analisis)', username: 'dewi.lestari', password: 'belajar123' },
   { name: 'Siti Nurhaliza (Pemahaman)', username: 'siti.nurhaliza', password: 'belajar123' },
   { name: 'Budi Santoso (Butuh Bimbingan)', username: 'budi.santoso', password: 'belajar123' },
 ];
