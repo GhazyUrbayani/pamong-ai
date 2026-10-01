@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
       ]);
       const stored = db.select().from(teachers).where(eq(teachers.email, MVP_TEACHER_EMAIL)).get();
       if (stored) teacher = { id: stored.id, name: stored.name, email: stored.email };
-    } catch (err) {
+    } catch {
       console.warn('[auth/guru] SQLite unavailable; using explicit MVP demo identity.');
     }
 
