@@ -2,7 +2,7 @@ export type StoredQuestionCategory = 'hafalan' | 'pemahaman' | 'analisis';
 export type QuestionCategory = StoredQuestionCategory | 'unclassified';
 /** @deprecated Legacy name retained for storage compatibility. */
 export type QuestionLevel = QuestionCategory;
-export type ClassificationProvenance = 'model' | 'degraded' | 'malformed' | 'error' | 'not_run' | 'synthetic';
+export type ClassificationProvenance = 'model' | 'demo' | 'unavailable' | 'degraded' | 'malformed' | 'error' | 'not_run' | 'synthetic';
 export interface ClassificationResult { questionCategory: QuestionCategory; provenance: ClassificationProvenance; }
 export type AnswerProvenance = 'model' | 'demo' | 'unavailable' | 'application';
 export type SessionStatus = 'active' | 'closed';
