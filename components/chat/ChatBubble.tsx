@@ -93,7 +93,7 @@ export function ChatBubble({ message, aiTheme, currentStudentId }: ChatBubblePro
           </div>
         </div>
 
-        {/* Metadata: Bloom Badge + Timestamp */}
+        {/* Metadata: question-category badge + timestamp */}
         <div
           className="chat-bubble-meta"
           style={{

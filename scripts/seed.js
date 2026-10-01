@@ -86,7 +86,9 @@ function hasGeminiKey() {
  */
 async function embedChunks(chunks) {
   if (!hasGeminiKey()) {
-    if (process.env.PAMONG_DEMO_MODE !== 'true') throw new Error('No embedding provider configured. Set a key or PAMONG_DEMO_MODE=true.');\n    const vectors = chunks.map(mockEmbed);\n    return { vectors, real: false, provider: 'demo', model: 'heuristic-64-v1', dimensions: vectors[0]?.length || 64 };
+    if (process.env.PAMONG_DEMO_MODE !== 'true') throw new Error('No embedding provider configured. Set a key or PAMONG_DEMO_MODE=true.');
+    const vectors = chunks.map(mockEmbed);
+    return { vectors, real: false, provider: 'demo', model: 'heuristic-64-v1', dimensions: vectors[0]?.length || 64 };
   }
 
   try {
@@ -103,9 +105,13 @@ async function embedChunks(chunks) {
       throw new Error('incomplete embedding response');
     }
     return { vectors, real: true, provider: 'gemini', model, dimensions: vectors[0]?.length || 0 };
-  } catch (err) {
-    console.warn(`[Seed] Gemini embedding failed (${err.message}); using heuristic vectors.`);
-    const vectors = chunks.map(mockEmbed);\n    return { vectors, real: false, provider: 'demo', model: 'heuristic-64-v1', dimensions: vectors[0]?.length || 64 };
+  } catch {
+    console.warn('[Seed] Gemini embedding provider call failed.');
+    if (process.env.PAMONG_DEMO_MODE !== 'true') {
+      throw new Error('Gemini embedding failed and demo fallback is disabled.');
+    }
+    const vectors = chunks.map(mockEmbed);
+    return { vectors, real: false, provider: 'demo', model: 'heuristic-64-v1', dimensions: vectors[0]?.length || 64 };
   }
 }
 
@@ -679,8 +685,8 @@ async function seed() {
         `).run(uId, sConf.id, studentId, null, 'user', c.user, c.level, 'synthetic', t);
 
         db.prepare(`
-          INSERT INTO messages (id, session_id, student_id, room_code, role, content, question_level, created_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          INSERT INTO messages (id, session_id, student_id, room_code, role, content, question_level, classification_provenance, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `).run(aId, sConf.id, studentId, null, 'assistant', c.assistant, null, null, t + 1000);
       }
     }
