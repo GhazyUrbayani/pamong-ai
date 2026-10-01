@@ -18,7 +18,7 @@ function DashboardContent(){
    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:16}}>
     <Metric label="Total siswa" value={stats.length} sub={String(activeCount)+' sudah bertanya'}/>
     <Metric label="Klasifikasi model valid" value={valid} sub="Denominator distribusi pertanyaan"/>
-    <Metric label="Belum terklasifikasi" value={unknown} sub="Error, degraded, legacy, atau synthetic"/>
+    <Metric label="Belum terklasifikasi" value={unknown} sub="Demo, unavailable, malformed/error, legacy, atau synthetic"/>
     <Metric label="Kuota per siswa" value={active?.quotaPerStudent||0} sub="Pesan pengguna maksimum"/>
    </div>
    <div><h2 className="font-bold">Distribusi bentuk pertanyaan</h2><p className="text-xs text-muted mb-3">Ini observasi jenis pertanyaan, bukan diagnosis kemampuan atau progres belajar.</p>{active&&<StudentTable students={stats} quotaTotal={active.quotaPerStudent}/>}</div>
