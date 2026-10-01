@@ -72,7 +72,7 @@ export default function SiswaLoginPage() {
           <div className="login-logo-icon">🦉</div>
           <div>
             <h1>PAMONG AI</h1>
-            <p>Ruang Belajar Siswa Berbasis AI</p>
+            <p>Akses Demo MVP — Ruang Belajar Siswa</p>
           </div>
         </div>
 
@@ -85,7 +85,7 @@ export default function SiswaLoginPage() {
           }}
         >
           <div className="text-xs font-semibold text-brand mb-2">
-            💡 Pilih Akun Demo Siswa (Otomatis):
+            💡 Pilih Akun Demo MVP Siswa:
           </div>
           <div className="flex flex-wrap gap-1.5">
             {DEMO_PRESETS.map((preset) => (
@@ -121,6 +121,10 @@ export default function SiswaLoginPage() {
             {error}
           </div>
         )}
+
+        <p className="text-xs text-muted mb-4">
+          Akses siswa pada halaman ini ditujukan untuk demonstrasi MVP. Kredensial sesi yang dibuat guru tetap diverifikasi melalui database saat runtime mendukungnya.
+        </p>
 
         <form onSubmit={handleLogin}>
           <div className="field">
@@ -197,7 +201,7 @@ export default function SiswaLoginPage() {
                   <span>Memulai Ruang Belajar...</span>
                 </div>
               ) : (
-                'Mulai Belajar Sekarang ➔'
+                'Masuk Demo MVP ➔'
               )}
             </button>
           </div>
