@@ -54,8 +54,8 @@ try {
     },
     body: JSON.stringify({ message: 'Apa fungsi klorofil pada fotosintesis?' }),
   });
-  assert(chat.questionLevel === 'unclassified', 'Degraded classifier was counted as a valid category.');
-  assert(chat.classificationProvenance === 'degraded', 'Classifier provenance is not explicit.');
+  assert(chat.questionLevel === 'unclassified', 'Demo classifier was counted as a valid category.');
+  assert(chat.classificationProvenance === 'demo', 'Demo classifier provenance is not explicit.');
 
   const transcript = await request('/api/guru/student-chat/' + student.student.id, {
     headers: { Authorization: 'Bearer ' + teacher.token },
