@@ -141,8 +141,8 @@ export function StudentTable({
                   <td>{student.unclassified}</td>
                   <td className="text-xs text-secondary">
                     {denominator
-                      ? 'Distribusi dari ' + denominator + ' pertanyaan terklasifikasi.'
-                      : 'Belum ada pertanyaan terklasifikasi.'}
+                      ? 'Berdasarkan ' + denominator + ' pertanyaan yang sudah dikategorikan.'
+                      : 'Belum ada pertanyaan yang masuk kategori.'}
                   </td>
                 </tr>
               );
