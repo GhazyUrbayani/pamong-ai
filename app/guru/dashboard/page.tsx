@@ -132,7 +132,7 @@ function DashboardContent() {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg-base)', paddingBottom: 64 }}>
-      <header className="page-header justify-between">
+      <header className="page-header dashboard-header justify-between">
         <div>
           <h1 className="font-bold">🦉 Pamong AI</h1>
           <div className="flex items-center gap-2 mt-1">
@@ -219,7 +219,7 @@ function DashboardContent() {
           </div>
         ) : (
           <>
-            <div className="card">
+            <div className="card session-selector-card">
               <div className="dashboard-section-heading">
                 <div>
                   <h2 className="font-bold">Kelas & sesi</h2>
@@ -228,7 +228,7 @@ function DashboardContent() {
                   </p>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="session-tabs">
                 {sessions.map((session) => (
                   <button
                     key={session.id}
@@ -242,13 +242,7 @@ function DashboardContent() {
               </div>
             </div>
 
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))',
-                gap: 16,
-              }}
-            >
+            <div className="dashboard-metric-grid">
               <Metric
                 label="Total siswa"
                 value={stats.length}
@@ -271,7 +265,7 @@ function DashboardContent() {
               />
             </div>
 
-            <div>
+            <section className="dashboard-distribution-section">
               <div className="dashboard-section-heading distribution-heading">
                 <div>
                   <h2 className="font-bold">Distribusi bentuk pertanyaan</h2>
@@ -292,7 +286,7 @@ function DashboardContent() {
                   dataMode={dataMode}
                 />
               )}
-            </div>
+            </section>
           </>
         )}
       </main>
