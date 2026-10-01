@@ -12,16 +12,34 @@ export async function GET(req: NextRequest) {
     const payload = await verifyToken(token) as TeacherJWT & { sub: string };
     if (payload.role !== 'teacher') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
+    const mode = new URL(req.url).searchParams.get('mode') === 'real' ? 'real' : 'demo';
+
+    if (mode === 'demo') {
+      return NextResponse.json({
+        sessions: MVP_DEMO_SESSIONS,
+        dataMode: 'demo',
+        dataProvenance: 'synthetic',
+      });
+    }
+
     try {
       const { sessionQueries } = await import('@/db/queries/sessions');
       const sessions = await sessionQueries.getByTeacher(payload.sub);
-      return NextResponse.json({ sessions, mvpDemo: false });
-    } catch {
       return NextResponse.json({
-        sessions: MVP_DEMO_SESSIONS,
-        mvpDemo: true,
-        dataProvenance: 'synthetic',
+        sessions,
+        dataMode: 'real',
+        dataProvenance: 'database',
       });
+    } catch (err) {
+      console.error('[api/sesi GET real]', err);
+      return NextResponse.json(
+        {
+          error: 'Real Data belum tersedia pada deployment ini.',
+          code: 'REAL_DATA_UNAVAILABLE',
+          dataMode: 'real',
+        },
+        { status: 503 }
+      );
     }
   } catch {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
