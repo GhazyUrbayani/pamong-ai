@@ -30,27 +30,28 @@ export async function GET(
     if (payload.role !== 'teacher') return new Response('Forbidden', { status: 403 });
 
     const { sesiId } = await params;
-
-    // Prefer the database path. If native SQLite is unavailable (for example on
-    // a Cloudflare Workers MVP deployment), fall back to explicit synthetic data.
-    let mvpDemo = false;
+    const mode = url.searchParams.get('mode') === 'real' ? 'real' : 'demo';
     let statsProvider: () => Promise<unknown>;
 
-    try {
-      const [{ sessionQueries }, { getChatService }] = await Promise.all([
-        import('@/db/queries/sessions'),
-        import('@/services/chat.service'),
-      ]);
-      const session = await sessionQueries.getById(sesiId);
-      if (!session) return new Response('Not Found', { status: 404 });
-      if (session.teacherId !== payload.sub) return new Response('Forbidden', { status: 403 });
-      const chatService = getChatService();
-      statsProvider = () => chatService.computeStudentStats(sesiId);
-    } catch {
+    if (mode === 'demo') {
       const session = getMvpDemoSession(sesiId);
       if (!session) return new Response('Not Found', { status: 404 });
-      mvpDemo = true;
       statsProvider = async () => getMvpDemoStats(sesiId);
+    } else {
+      try {
+        const [{ sessionQueries }, { getChatService }] = await Promise.all([
+          import('@/db/queries/sessions'),
+          import('@/services/chat.service'),
+        ]);
+        const session = await sessionQueries.getById(sesiId);
+        if (!session) return new Response('Not Found', { status: 404 });
+        if (session.teacherId !== payload.sub) return new Response('Forbidden', { status: 403 });
+        const chatService = getChatService();
+        statsProvider = () => chatService.computeStudentStats(sesiId);
+      } catch (err) {
+        console.error('[SSE real data unavailable]', err);
+        return new Response('Real Data unavailable', { status: 503 });
+      }
     }
 
     const stream = new ReadableStream({
@@ -62,8 +63,8 @@ export async function GET(
             const stats = await statsProvider();
             const data = `data: ${JSON.stringify({
               stats,
-              mvpDemo,
-              dataProvenance: mvpDemo ? 'synthetic' : 'database',
+              dataMode: mode,
+              dataProvenance: mode === 'demo' ? 'synthetic' : 'database',
             })}\n\n`;
             controller.enqueue(encoder.encode(data));
           } catch (err) {
@@ -75,7 +76,7 @@ export async function GET(
         await sendStats();
 
         // Real data polls frequently; synthetic MVP data is stable.
-        const interval = setInterval(sendStats, mvpDemo ? 30000 : 3000);
+        const interval = setInterval(sendStats, mode === 'demo' ? 30000 : 3000);
 
         // Heartbeat to keep connection alive
         const heartbeat = setInterval(() => {
