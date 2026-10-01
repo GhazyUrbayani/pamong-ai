@@ -4,8 +4,8 @@ const baseUrl = 'http://127.0.0.1:3000';
 const env = {
   ...process.env,
   PORT: '3000',
-  JWT_SECRET: process.env.JWT_SECRET || 'smoke-only-secret',
   PAMONG_DEMO_MODE: 'true',
+  PAMONG_MVP_MODE: 'true',
 };
 
 const seeded = spawnSync(process.execPath, ['scripts/seed.js'], { env, stdio: 'inherit' });
@@ -38,6 +38,7 @@ try {
     body: JSON.stringify({ email: 'guru@pamong-ai.id', password: 'demo1234' }),
   });
   assert(teacher.token, 'Teacher token missing.');
+  assert(teacher.mvpDemo === true, 'Teacher login is not marked as MVP demo access.');
 
   const student = await request('/api/auth/siswa', {
     method: 'POST',
@@ -45,6 +46,7 @@ try {
     body: JSON.stringify({ username: 'ahmad.fauzi', password: 'belajar123' }),
   });
   assert(student.token, 'Student token missing.');
+  assert(student.mvpDemo === true, 'Student login is not marked as MVP demo access.');
 
   const chat = await request('/api/chat', {
     method: 'POST',
@@ -63,6 +65,7 @@ try {
   assert(transcript.messages.some((m) => m.classificationProvenance === 'synthetic'), 'Seed labels are not marked synthetic.');
 
   console.log('Demo smoke flow passed.');
+  console.log('MVP JWT fallback was exercised without JWT_SECRET.');
   console.log('Seeded transcripts are synthetic.');
   console.log('Live AI was NOT tested; PAMONG_DEMO_MODE=true.');
 } finally {
