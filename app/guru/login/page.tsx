@@ -24,7 +24,7 @@ export default function GuruLoginPage() {
       });
 
       const raw = await res.text();
-      let data: any = {};
+      let data: { error?: string; token?: string; teacher?: unknown } = {};
       if (raw) {
         try {
           data = JSON.parse(raw);
@@ -39,11 +39,12 @@ export default function GuruLoginPage() {
         );
       }
 
+      if (!data.token || !data.teacher) throw new Error('Respons login MVP tidak lengkap.');
       localStorage.setItem('guru_token', data.token);
       localStorage.setItem('guru_data', JSON.stringify(data.teacher));
       router.push('/guru/dashboard');
-    } catch (err: any) {
-      setError(err.message || 'Terjadi kesalahan saat login.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Terjadi kesalahan saat login.');
     } finally {
       setIsLoading(false);
     }
