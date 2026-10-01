@@ -249,9 +249,9 @@ function DashboardContent() {
                 sub={String(activeCount) + ' sudah bertanya'}
               />
               <Metric
-                label="Pertanyaan terklasifikasi"
+                label="Sudah dikategorikan"
                 value={classified}
-                sub="Berhasil dikenali kategorinya"
+                sub="Pertanyaan yang masuk salah satu kategori"
               />
               <Metric
                 label="Perlu ditinjau"
@@ -270,7 +270,7 @@ function DashboardContent() {
                 <div>
                   <h2 className="font-bold">Distribusi bentuk pertanyaan</h2>
                   <p className="text-sm text-muted">
-                    Observasi jenis pertanyaan, bukan diagnosis kemampuan atau progres belajar.
+                    Menunjukkan jenis pertanyaan yang muncul, bukan penilaian kemampuan siswa.
                   </p>
                 </div>
                 <div className="question-legend" aria-label="Legenda kategori pertanyaan">
