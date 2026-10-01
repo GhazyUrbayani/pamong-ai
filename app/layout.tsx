@@ -1,21 +1,6 @@
 import type { Metadata, Viewport } from 'next';
-import { Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { ServiceWorkerRegistrar } from '@/components/pwa/ServiceWorkerRegistrar';
-
-const jakarta = Plus_Jakarta_Sans({
-  subsets: ['latin'],
-  variable: '--font-sans',
-  display: 'swap',
-  weight: ['400', '500', '600', '700', '800'],
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ['latin'],
-  variable: '--font-mono',
-  display: 'swap',
-  weight: ['400', '500', '600', '700'],
-});
 
 export const metadata: Metadata = {
   title: 'PAMONG AI — Tutor Pintar Indonesia',
@@ -53,7 +38,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="id" className={`${jakarta.variable} ${jetbrainsMono.variable}`}>
+    <html lang="id">
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="application-name" content="PAMONG AI" />
