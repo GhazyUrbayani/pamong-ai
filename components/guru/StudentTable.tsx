@@ -20,7 +20,7 @@ export function StudentTable({
   const filters: Array<{ key: FilterKey; label: string }> = [
     { key: 'all', label: 'Semua' },
     { key: 'active', label: 'Sudah bertanya' },
-    { key: 'unknown', label: 'Ada belum terklasifikasi' },
+    { key: 'unknown', label: 'Perlu ditinjau' },
     { key: 'inactive', label: 'Belum aktif' },
   ];
 
@@ -89,8 +89,8 @@ export function StudentTable({
             <tr>
               <th>Siswa</th>
               <th>Chat</th>
-              <th>{dataMode === 'demo' ? 'Distribusi contoh sintetik' : 'Distribusi pertanyaan valid'}</th>
-              <th>Belum terklasifikasi</th>
+              <th>Distribusi pertanyaan</th>
+              <th>Perlu ditinjau</th>
               <th>Catatan</th>
             </tr>
           </thead>
@@ -140,13 +140,9 @@ export function StudentTable({
                   </td>
                   <td>{student.unclassified}</td>
                   <td className="text-xs text-secondary">
-                    {dataMode === 'demo'
-                      ? denominator
-                        ? 'Data sintetik untuk preview UI — bukan hasil model.'
-                        : 'Belum ada contoh aktivitas sintetik.'
-                      : denominator
-                        ? 'Distribusi dari ' + denominator + ' klasifikasi model valid.'
-                        : 'Belum ada klasifikasi model valid.'}
+                    {denominator
+                      ? 'Distribusi dari ' + denominator + ' pertanyaan terklasifikasi.'
+                      : 'Belum ada pertanyaan terklasifikasi.'}
                   </td>
                 </tr>
               );
@@ -176,12 +172,9 @@ export function StudentTable({
           >
             <div className="flex justify-between items-start gap-3">
               <div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="font-bold">{selected.displayName}</h3>
-                  {dataMode === 'demo' && <span className="data-status-pill demo">SINTETIK</span>}
-                </div>
+                <h3 className="font-bold">{selected.displayName}</h3>
                 <p className="text-xs text-muted mt-1">
-                  {selected.chatUsed} pesan · {selected.unclassified} belum terklasifikasi
+                  {selected.chatUsed} pesan · {selected.unclassified} perlu ditinjau
                 </p>
               </div>
               <button
@@ -192,12 +185,6 @@ export function StudentTable({
                 ✕
               </button>
             </div>
-
-            {dataMode === 'demo' && (
-              <div className="demo-transcript-note">
-                Transcript ini contoh sintetik untuk presentasi MVP, bukan percakapan siswa nyata.
-              </div>
-            )}
 
             <div className="divider" />
 
@@ -217,13 +204,10 @@ export function StudentTable({
                       {message.classificationProvenance === 'model' ? (
                         <Badge level={message.questionLevel} />
                       ) : message.classificationProvenance === 'synthetic' ? (
-                        <span className="synthetic-category-label">
-                          <Badge level={message.questionLevel} />
-                          <span>Data sintetik</span>
-                        </span>
+                        <Badge level={message.questionLevel} />
                       ) : (
                         <span className="text-xs text-muted">
-                          ❔ Belum terklasifikasi ({message.classificationProvenance || 'legacy'})
+                          ❔ Perlu ditinjau
                         </span>
                       )}
                     </div>
