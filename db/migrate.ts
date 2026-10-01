@@ -35,7 +35,10 @@ export function runMigrations() {
       session_id TEXT NOT NULL REFERENCES sessions(id),
       chunk_text TEXT NOT NULL,
       embedding_json TEXT NOT NULL,
-      chunk_index INTEGER NOT NULL
+      chunk_index INTEGER NOT NULL,
+      embedding_provider TEXT,
+      embedding_model TEXT,
+      embedding_dimensions INTEGER
     );
 
     CREATE TABLE IF NOT EXISTS students (
@@ -56,6 +59,7 @@ export function runMigrations() {
       role TEXT NOT NULL,
       content TEXT NOT NULL,
       question_level TEXT,
+      classification_provenance TEXT,
       created_at INTEGER NOT NULL
     );
 
@@ -67,6 +71,21 @@ export function runMigrations() {
 
   migrateStudentPasswordsToHashes();
   addGuardianConsentColumns();
+  addMvpIntegrityColumns();
+}
+
+function addMvpIntegrityColumns() {
+  const chunkColumns = (sqlite.prepare('PRAGMA table_info(knowledge_chunks)').all() as Array<{ name: string }>)
+    .map((c) => c.name);
+  if (!chunkColumns.includes('embedding_provider')) sqlite.exec('ALTER TABLE knowledge_chunks ADD COLUMN embedding_provider TEXT');
+  if (!chunkColumns.includes('embedding_model')) sqlite.exec('ALTER TABLE knowledge_chunks ADD COLUMN embedding_model TEXT');
+  if (!chunkColumns.includes('embedding_dimensions')) sqlite.exec('ALTER TABLE knowledge_chunks ADD COLUMN embedding_dimensions INTEGER');
+
+  const messageColumns = (sqlite.prepare('PRAGMA table_info(messages)').all() as Array<{ name: string }>)
+    .map((c) => c.name);
+  if (!messageColumns.includes('classification_provenance')) {
+    sqlite.exec('ALTER TABLE messages ADD COLUMN classification_provenance TEXT');
+  }
 }
 
 /**

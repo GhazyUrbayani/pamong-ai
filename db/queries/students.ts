@@ -40,9 +40,10 @@ export const studentQueries = {
     db
       .select({
         level: messages.questionLevel,
+        classificationProvenance: messages.classificationProvenance,
         count: sql<number>`count(*)`,
       })
       .from(messages)
       .where(and(eq(messages.studentId, studentId), eq(messages.role, 'user')))
-      .groupBy(messages.questionLevel),
+      .groupBy(messages.questionLevel, messages.classificationProvenance),
 };
