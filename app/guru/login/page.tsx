@@ -23,9 +23,20 @@ export default function GuruLoginPage() {
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await res.json();
+      const raw = await res.text();
+      let data: any = {};
+      if (raw) {
+        try {
+          data = JSON.parse(raw);
+        } catch {
+          // Some hosting/runtime failures can return HTML or an empty body.
+          // Keep the UI actionable instead of throwing "Unexpected end of JSON input".
+        }
+      }
       if (!res.ok) {
-        throw new Error(data.error || 'Login gagal.');
+        throw new Error(
+          data.error || `Login gagal (HTTP ${res.status}). Backend tidak mengembalikan respons JSON yang valid.`
+        );
       }
 
       localStorage.setItem('guru_token', data.token);
