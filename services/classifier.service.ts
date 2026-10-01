@@ -1,6 +1,6 @@
 import { getLLMService, LLMService } from './llm.service';
 import { ClassificationResult, ClassificationProvenance, QuestionCategory } from '@/types';
-import { QUESTION_CATEGORY_RUBRIC, resolveClassification } from '@/lib/mvp-policy';
+import { QUESTION_CATEGORY_RUBRIC, classifyWithProvider } from '@/lib/mvp-policy';
 
 const CLASSIFIER_SYSTEM_PROMPT = `Kamu adalah pengklasifikasi bentuk pertanyaan siswa.
 Pilih SATU key berdasarkan permintaan yang tampak pada pertanyaan, bukan kemampuan siswa:
@@ -13,17 +13,16 @@ Jangan menyimpulkan tingkat kemampuan, capaian belajar, atau Taksonomi Bloom sis
 export class ClassifierService {
   constructor(private llm: LLMService = getLLMService()) {}
   async classify(question: string): Promise<ClassificationResult> {
-    try {
-      const response = await this.llm.chatWithMeta([
+    const resolved = await classifyWithProvider(() =>
+      this.llm.chatWithMeta([
         { role:'system', content:CLASSIFIER_SYSTEM_PROMPT },
         { role:'user', content:question },
-      ], { temperature:0, maxTokens:10 });
-      const resolved=resolveClassification(response);
-      return { questionCategory:resolved.category as QuestionCategory, provenance:resolved.provenance as ClassificationProvenance };
-    } catch {
-      const resolved=resolveClassification(undefined,true);
-      return { questionCategory:resolved.category as QuestionCategory, provenance:resolved.provenance as ClassificationProvenance };
-    }
+      ], { temperature:0, maxTokens:10 })
+    );
+    return {
+      questionCategory: resolved.category as QuestionCategory,
+      provenance: resolved.provenance as ClassificationProvenance,
+    };
   }
 }
 let _classifierService: ClassifierService | null = null;
