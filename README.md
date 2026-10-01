@@ -70,6 +70,14 @@ Production-facing behavior does not silently substitute module-flavoured filler.
 
 Demo outputs do not become valid classifier statistics.
 
+## Deployment runtime compatibility
+
+This MVP currently persists data with `better-sqlite3` in a local `pamong-ai.db` file. That requires a Node.js runtime where the native SQLite package can execute and the filesystem used for the database is writable and persistent.
+
+A plain Cloudflare Workers/OpenNext deployment is **not a compatible persistence target for the current repository as-is**. Cloudflare Workers exposes many Node.js APIs, but native/local SQLite persistence used by `better-sqlite3` is not the storage architecture this MVP implements. Deploy the current MVP to a compatible Node host, or treat a move to Cloudflare D1/another Workers-native persistent database as a separate database-platform migration. That migration is intentionally outside this correction patch.
+
+Auth routes keep database imports inside their request error boundaries so an incompatible runtime returns a structured JSON service error instead of an empty/non-JSON 500.
+
 ## Local setup
 
 ```bash
