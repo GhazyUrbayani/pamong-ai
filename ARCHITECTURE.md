@@ -72,3 +72,8 @@ The MVP needs a teacher-labelled question set, classification agreement/error re
 ## 12. Login is an MVP demonstration boundary
 
 The login UI is explicitly labelled as competition-MVP access. Teacher login uses the documented demo identity. Student logins normally verify generated credentials against SQLite; the four documented seeded student identities have a stateless fallback only when SQLite cannot load. This fallback is not presented as production authentication and does not make downstream SQLite-backed routes Workers-compatible.
+
+
+## 13. Data-source mode boundary
+
+The teacher dashboard exposes an explicit `demo` / `real` data-source control. Demo mode reads fixed synthetic classes and transcripts from `lib/mvp-demo-data.ts`; Real Data mode uses the database only. A Real Data failure is surfaced as unavailable rather than falling back to synthetic content. This keeps provenance visible to judges and prevents mock examples from being mistaken for measured classroom activity.
