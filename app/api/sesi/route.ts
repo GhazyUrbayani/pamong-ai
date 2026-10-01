@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
     console.error('[api/sesi POST]', err);
     return NextResponse.json(
       {
-        error: 'Mode demo MVP memakai kelas sintetik tetap. Pembuatan sesi baru memerlukan backend SQLite yang kompatibel.',
+        error: 'Pembuatan sesi Real Data memerlukan backend persistence yang kompatibel. Mode Demo memakai kelas sintetik tetap dan bersifat read-only.',
         code: 'MVP_DEMO_READ_ONLY',
       },
       { status: 503 }
