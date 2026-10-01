@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractBearerToken } from '@/lib/auth';
-import { getSessionService } from '@/services/session.service';
-import { sessionQueries } from '@/db/queries/sessions';
+import { MVP_DEMO_SESSIONS } from '@/lib/mvp-demo-data';
 import { TeacherJWT } from '@/types';
-
-const sessionService = getSessionService();
 
 // GET /api/sesi — list teacher's sessions
 export async function GET(req: NextRequest) {
@@ -15,8 +12,17 @@ export async function GET(req: NextRequest) {
     const payload = await verifyToken(token) as TeacherJWT & { sub: string };
     if (payload.role !== 'teacher') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-    const sessions = await sessionQueries.getByTeacher(payload.sub);
-    return NextResponse.json({ sessions });
+    try {
+      const { sessionQueries } = await import('@/db/queries/sessions');
+      const sessions = await sessionQueries.getByTeacher(payload.sub);
+      return NextResponse.json({ sessions, mvpDemo: false });
+    } catch {
+      return NextResponse.json({
+        sessions: MVP_DEMO_SESSIONS,
+        mvpDemo: true,
+        dataProvenance: 'synthetic',
+      });
+    }
   } catch {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -51,7 +57,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const result = await sessionService.createSession({
+    const { getSessionService } = await import('@/services/session.service');
+    const result = await getSessionService().createSession({
       teacherId: payload.sub,
       title: title.trim(),
       subject: subject.trim(),
@@ -64,6 +71,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(result, { status: 201 });
   } catch (err) {
     console.error('[api/sesi POST]', err);
-    return NextResponse.json({ error: 'Gagal membuat sesi.' }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Mode demo MVP memakai kelas sintetik tetap. Pembuatan sesi baru memerlukan backend SQLite yang kompatibel.',
+        code: 'MVP_DEMO_READ_ONLY',
+      },
+      { status: 503 }
+    );
   }
 }
