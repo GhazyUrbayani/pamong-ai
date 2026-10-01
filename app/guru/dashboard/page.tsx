@@ -149,7 +149,7 @@ function DashboardContent() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap" style={{ justifyContent: 'flex-end' }}>
           <div className="data-mode-switch" role="group" aria-label="Pilih sumber data">
             <button
               type="button"
@@ -268,7 +268,10 @@ function DashboardContent() {
               <Metric
                 label="Total siswa"
                 value={stats.length}
-                sub={String(activeCount) + ' sudah memiliki contoh aktivitas'}
+                sub={
+                  String(activeCount) +
+                  (dataMode === 'demo' ? ' sudah memiliki contoh aktivitas' : ' sudah bertanya')
+                }
               />
               <Metric
                 label={dataMode === 'demo' ? 'Contoh klasifikasi sintetik' : 'Klasifikasi model valid'}
