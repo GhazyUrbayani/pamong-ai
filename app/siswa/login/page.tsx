@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { InstallPrompt } from '@/components/pwa/InstallPrompt';
+import { Session } from '@/types';
 
 const DEMO_PRESETS = [
   { name: 'Ahmad Fauzi (contoh pertanyaan penerapan)', username: 'ahmad.fauzi', password: 'belajar123' },
@@ -33,7 +34,7 @@ export default function SiswaLoginPage() {
       });
 
       const raw = await res.text();
-      let data: any = {};
+      let data: { error?: string; token?: string; student?: { id:string; username:string; displayName:string; roomCode:string|null }; session?: Session } = {};
       if (raw) {
         try {
           data = JSON.parse(raw);
@@ -48,6 +49,8 @@ export default function SiswaLoginPage() {
         );
       }
 
+      if (!data.token || !data.student || !data.session) throw new Error('Respons login MVP tidak lengkap.');
+
       const studentData = {
         ...data.student,
         roomCode: roomCode.trim() || data.student.roomCode,
@@ -58,8 +61,8 @@ export default function SiswaLoginPage() {
       localStorage.setItem('siswa_session', JSON.stringify(data.session));
 
       router.push('/siswa/chat');
-    } catch (err: any) {
-      setError(err.message || 'Terjadi kesalahan saat masuk.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Terjadi kesalahan saat masuk.');
     } finally {
       setIsLoading(false);
     }
